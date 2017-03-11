@@ -1,0 +1,20 @@
+{
+  "name": "hughs-vlog-api",
+  "description": "Hugh’s Vlog API",
+  "version": "0.0.0",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hguiney/hughs-vlog-api.git"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "devDependencies": {},
+  "dependencies": {
+    "body-parser": "^1.17.1",
+    "express": "^4.15.2",
+    "http": "0.0.0",
+    "method-override": "^2.3.7",
+    "morgan": "^1.8.1"
+  }
+}
