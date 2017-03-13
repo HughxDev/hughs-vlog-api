@@ -6,11 +6,20 @@ var app            = express();
 var router         = express.Router();
 var http           = require( 'http' );
 
+const Logger = require( 'bug-killer' );
+
+var videos = require( './routes/videos' );
+// var oauth2callback = require( './routes/oauth2callback' );
+
 router.use(function( req, res, next ) {  
   res.header( 'Access-Control-Allow-Origin', '*' );
+  // res.header( 'Access-Control-Allow-Headers', 'X-Auth-Key');
+  res.header( 'Access-Control-Allow-Methods', 'OPTIONS,GET,PUT,POST,DELETE' );
 
   next();
 });
+
+app.use( '/', router );
 
 app.set( 'port', process.env.PORT || 3000 );
 
@@ -27,7 +36,7 @@ app.route( '/' )
   .get( function ( req, res ) {
     res.send( 'hello' );
   } )
-;
+; // /
 
 app.route( '/oembed' )
   .get( function ( req, res ) {
@@ -65,4 +74,14 @@ app.route( '/oembed' )
 
     oembedReq.end();
   } )
-;
+; // /oembed
+
+app.route( '/upload' )
+; // upload
+
+app.route( '/search' )
+; // search
+
+app.use( '/videos', videos );
+
+// app.use( '/oauth2callback', oauth2callback );

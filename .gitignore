@@ -40,3 +40,6 @@ Thumbs.db
 node_modules/*
 temp/*
 sftp-config.json
+credentials.json
+service-account.json
+tokens.json

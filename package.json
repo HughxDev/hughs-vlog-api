@@ -12,9 +12,14 @@
   "devDependencies": {},
   "dependencies": {
     "body-parser": "^1.17.1",
+    "bug-killer": "^4.4.2",
     "express": "^4.15.2",
+    "googleapis": "^18.0.0",
     "http": "0.0.0",
     "method-override": "^2.3.7",
-    "morgan": "^1.8.1"
+    "morgan": "^1.8.1",
+    "opn": "^4.0.2",
+    "r-json": "^1.2.5",
+    "youtube-api": "^2.0.6"
   }
 }
