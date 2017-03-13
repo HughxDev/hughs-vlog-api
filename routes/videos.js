@@ -7,7 +7,10 @@ const fs = require( 'fs' );
 const Logger = require( 'bug-killer' );
 const readJson = require( 'r-json' );
 const opn = require( 'opn' );
+const libxmljs = require( 'libxmljs' );
+
 const CREDENTIALS = readJson( `${__dirname}/../credentials.json` );
+const OVMLpath = `${__dirname}/../vlog.ovml`;
 
 var tokensPath = `${__dirname}/../tokens.json`;
 
@@ -94,6 +97,32 @@ if ( fs.existsSync( tokensPath ) ) {
 function tokensExist() {
   return ( fs.existsSync( tokensPath ) && TOKENS && ( 'expiry_date' in TOKENS ) );
 }
+
+function updateXML( res ) {
+  var file = fs.readFile( OVMLpath, 'utf8', function ( error, data ) {
+    // res.send(  data );
+    var ovml = libxmljs.parseXmlString( data );
+
+    // res.send(
+    var node = ovml.root().find(
+        '//ovml:video[1]',
+        {
+          ovml: 'http://vocab.nospoon.tv/ovml#'
+        }
+      )[0]
+    ;
+
+    node.addChild( new libxmljs.Element( ovml, 'element-name', 'text' ) );
+    
+    // res.setHeader( 'Content-Type', 'application/ovml+xml' );
+    res.setHeader( 'Content-Type', 'application/xml' );
+    res.send( ovml.toString() );
+  } );
+}
+
+router.get( '/xml', function ( req, res, next ) {
+  updateXML( res );
+} );
 
 router.get( '/', function ( req, res, next ) {
   if ( tokensExist() ) {

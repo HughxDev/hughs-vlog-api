@@ -1,0 +1,499 @@
+{
+  "kind": "youtube#videoListResponse",
+  "etag": "\"uQc-MPTsstrHkQcRXL3IWLmeNsM/H2zEdh5yj6vCn9xHN7FsaQQ1FPU\"",
+  "pageInfo": {
+    "totalResults": 5,
+    "resultsPerPage": 5
+  },
+  "items": [
+    {
+      "kind": "youtube#video",
+      "etag": "\"uQc-MPTsstrHkQcRXL3IWLmeNsM/QDTWjvLjf0KerPiSZwrlEUBTZck\"",
+      "id": "o5MaYhQZONY",
+      "snippet": {
+        "publishedAt": "2016-05-18T16:15:38.000Z",
+        "channelId": "UCGPCcxdykgp6hgvL0XE3yaA",
+        "title": "Hugh's Startup Vlog Episode #0 - Introduction",
+        "description": "Embarking on a daily vlog series to chronicle the makings of my startup. Here’s the first installment! #HughsStartupVlog",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/o5MaYhQZONY/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/o5MaYhQZONY/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/o5MaYhQZONY/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/o5MaYhQZONY/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          },
+          "maxres": {
+            "url": "https://i.ytimg.com/vi/o5MaYhQZONY/maxresdefault.jpg",
+            "width": 1280,
+            "height": 720
+          }
+        },
+        "channelTitle": "Hugh Guiney",
+        "tags": [
+          "vlog",
+          "startup",
+          "video blog",
+          "video",
+          "entrepreneurship",
+          "interactive entertainment",
+          "RedBlue"
+        ],
+        "categoryId": "22",
+        "liveBroadcastContent": "none",
+        "localized": {
+          "title": "Hugh's Startup Vlog Episode #0 - Introduction",
+          "description": "Embarking on a daily vlog series to chronicle the makings of my startup. Here’s the first installment! #HughsStartupVlog"
+        },
+        "defaultAudioLanguage": "en"
+      },
+      "contentDetails": {
+        "duration": "PT9M51S",
+        "dimension": "2d",
+        "definition": "hd",
+        "caption": "false",
+        "licensedContent": true,
+        "projection": "rectangular",
+        "hasCustomThumbnail": false
+      },
+      "status": {
+        "uploadStatus": "processed",
+        "privacyStatus": "public",
+        "license": "youtube",
+        "embeddable": true,
+        "publicStatsViewable": true
+      },
+      "statistics": {
+        "viewCount": "168",
+        "likeCount": "3",
+        "dislikeCount": "0",
+        "favoriteCount": "0",
+        "commentCount": "1"
+      },
+      "player": {
+        "embedHtml": "<iframe width=\"480\" height=\"270\" src=\"//www.youtube.com/embed/o5MaYhQZONY\" frameborder=\"0\" allowfullscreen></iframe>"
+      },
+      "topicDetails": {
+        "relevantTopicIds": [
+          "/m/019_rr"
+        ],
+        "topicCategories": [
+          "https://en.wikipedia.org/wiki/Lifestyle_(sociology)"
+        ]
+      },
+      "recordingDetails": {
+        "location": {
+          "latitude": 42.37362,
+          "longitude": -71.10973,
+          "altitude": 0
+        },
+        "recordingDate": "2016-05-18T00:00:00.000Z"
+      },
+      "fileDetails": {
+        "fileName": "Hugh's Startup Vlog #0-final.mp4"
+      },
+      "processingDetails": {
+        "processingStatus": "terminated"
+      }
+    },
+    {
+      "kind": "youtube#video",
+      "etag": "\"uQc-MPTsstrHkQcRXL3IWLmeNsM/LYoJWTnoXXgjkOo4JxTBBwpxYLc\"",
+      "id": "CDO06cwR4EI",
+      "snippet": {
+        "publishedAt": "2016-05-19T21:46:46.000Z",
+        "channelId": "UCGPCcxdykgp6hgvL0XE3yaA",
+        "title": "Hugh’s Startup Vlog Episode #1 - A Late Start; Why Open Source?",
+        "description": "#HughsStartupVlog",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/CDO06cwR4EI/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/CDO06cwR4EI/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/CDO06cwR4EI/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/CDO06cwR4EI/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          },
+          "maxres": {
+            "url": "https://i.ytimg.com/vi/CDO06cwR4EI/maxresdefault.jpg",
+            "width": 1280,
+            "height": 720
+          }
+        },
+        "channelTitle": "Hugh Guiney",
+        "tags": [
+          "HughsStartupVlog",
+          "vlog",
+          "video",
+          "startup",
+          "business",
+          "RedBlue",
+          "technology",
+          "open source",
+          "software",
+          "Github"
+        ],
+        "categoryId": "22",
+        "liveBroadcastContent": "none",
+        "localized": {
+          "title": "Hugh’s Startup Vlog Episode #1 - A Late Start; Why Open Source?",
+          "description": "#HughsStartupVlog"
+        }
+      },
+      "contentDetails": {
+        "duration": "PT4M21S",
+        "dimension": "2d",
+        "definition": "hd",
+        "caption": "false",
+        "licensedContent": true,
+        "projection": "rectangular",
+        "hasCustomThumbnail": false
+      },
+      "status": {
+        "uploadStatus": "processed",
+        "privacyStatus": "public",
+        "license": "youtube",
+        "embeddable": true,
+        "publicStatsViewable": true
+      },
+      "statistics": {
+        "viewCount": "54",
+        "likeCount": "0",
+        "dislikeCount": "0",
+        "favoriteCount": "0",
+        "commentCount": "1"
+      },
+      "player": {
+        "embedHtml": "<iframe width=\"480\" height=\"270\" src=\"//www.youtube.com/embed/CDO06cwR4EI\" frameborder=\"0\" allowfullscreen></iframe>"
+      },
+      "topicDetails": {
+        "relevantTopicIds": [
+          "/m/019_rr"
+        ],
+        "topicCategories": [
+          "https://en.wikipedia.org/wiki/Lifestyle_(sociology)"
+        ]
+      },
+      "fileDetails": {
+        "fileName": ""
+      },
+      "processingDetails": {
+        "processingStatus": "terminated"
+      }
+    },
+    {
+      "kind": "youtube#video",
+      "etag": "\"uQc-MPTsstrHkQcRXL3IWLmeNsM/md_W4GMq8o3moR72APMZb6d6pYE\"",
+      "id": "VbjBqL3wa2Q",
+      "snippet": {
+        "publishedAt": "2016-05-21T02:56:14.000Z",
+        "channelId": "UCGPCcxdykgp6hgvL0XE3yaA",
+        "title": "Hugh’s Startup Vlog Episode #2 - Fun vs. Productivity",
+        "description": "#HughsStartupVlog",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/VbjBqL3wa2Q/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/VbjBqL3wa2Q/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/VbjBqL3wa2Q/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/VbjBqL3wa2Q/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          },
+          "maxres": {
+            "url": "https://i.ytimg.com/vi/VbjBqL3wa2Q/maxresdefault.jpg",
+            "width": 1280,
+            "height": 720
+          }
+        },
+        "channelTitle": "Hugh Guiney",
+        "tags": [
+          "Improvisational theatre",
+          "Productivity",
+          "Alcoholic beverages",
+          "Startup company",
+          "Distraction",
+          "Impulsivity",
+          "Fun",
+          "vlogging"
+        ],
+        "categoryId": "22",
+        "liveBroadcastContent": "none",
+        "localized": {
+          "title": "Hugh’s Startup Vlog Episode #2 - Fun vs. Productivity",
+          "description": "#HughsStartupVlog"
+        }
+      },
+      "contentDetails": {
+        "duration": "PT7M52S",
+        "dimension": "2d",
+        "definition": "hd",
+        "caption": "false",
+        "licensedContent": true,
+        "projection": "rectangular",
+        "hasCustomThumbnail": false
+      },
+      "status": {
+        "uploadStatus": "processed",
+        "privacyStatus": "public",
+        "license": "youtube",
+        "embeddable": true,
+        "publicStatsViewable": true
+      },
+      "statistics": {
+        "viewCount": "42",
+        "likeCount": "0",
+        "dislikeCount": "1",
+        "favoriteCount": "0",
+        "commentCount": "0"
+      },
+      "player": {
+        "embedHtml": "<iframe width=\"480\" height=\"270\" src=\"//www.youtube.com/embed/VbjBqL3wa2Q\" frameborder=\"0\" allowfullscreen></iframe>"
+      },
+      "topicDetails": {
+        "relevantTopicIds": [
+          "/m/019_rr"
+        ],
+        "topicCategories": [
+          "https://en.wikipedia.org/wiki/Lifestyle_(sociology)"
+        ]
+      },
+      "fileDetails": {
+        "fileName": "Hugh's Startup Vlog Episode #2 - Fun vs. Productivity.mp4"
+      },
+      "processingDetails": {
+        "processingStatus": "terminated"
+      }
+    },
+    {
+      "kind": "youtube#video",
+      "etag": "\"uQc-MPTsstrHkQcRXL3IWLmeNsM/3modH-08-_5mBicNXZEgVBso4BA\"",
+      "id": "UbiGRA10K2c",
+      "snippet": {
+        "publishedAt": "2016-05-21T15:25:46.000Z",
+        "channelId": "UCGPCcxdykgp6hgvL0XE3yaA",
+        "title": "Hugh‘s Startup Vlog Episode #3 - Early Rise; Web Development Stalled",
+        "description": "#HughsStartupVlog",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/UbiGRA10K2c/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/UbiGRA10K2c/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/UbiGRA10K2c/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/UbiGRA10K2c/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          }
+        },
+        "channelTitle": "Hugh Guiney",
+        "tags": [
+          "Vlogging",
+          "Startup company",
+          "Web development",
+          "Error",
+          "Sleep",
+          "Improvisational theatre",
+          "Troubleshooting",
+          "Audition",
+          "improv",
+          "startup",
+          "webdev",
+          "localhost"
+        ],
+        "categoryId": "22",
+        "liveBroadcastContent": "none",
+        "localized": {
+          "title": "Hugh‘s Startup Vlog Episode #3 - Early Rise; Web Development Stalled",
+          "description": "#HughsStartupVlog"
+        }
+      },
+      "contentDetails": {
+        "duration": "PT3M22S",
+        "dimension": "2d",
+        "definition": "hd",
+        "caption": "false",
+        "licensedContent": true,
+        "projection": "rectangular",
+        "hasCustomThumbnail": false
+      },
+      "status": {
+        "uploadStatus": "processed",
+        "privacyStatus": "public",
+        "license": "youtube",
+        "embeddable": true,
+        "publicStatsViewable": true
+      },
+      "statistics": {
+        "viewCount": "38",
+        "likeCount": "1",
+        "dislikeCount": "0",
+        "favoriteCount": "0",
+        "commentCount": "0"
+      },
+      "player": {
+        "embedHtml": "<iframe width=\"480\" height=\"270\" src=\"//www.youtube.com/embed/UbiGRA10K2c\" frameborder=\"0\" allowfullscreen></iframe>"
+      },
+      "topicDetails": {
+        "relevantTopicIds": [
+          "/m/07c1v",
+          "/m/01k8wb"
+        ],
+        "topicCategories": [
+          "https://en.wikipedia.org/wiki/Knowledge",
+          "https://en.wikipedia.org/wiki/Technology"
+        ]
+      },
+      "fileDetails": {
+        "fileName": "Hugh‘s Startup Vlog Episode #3 - Early Start; Website Errors.mp4"
+      },
+      "processingDetails": {
+        "processingStatus": "terminated"
+      }
+    },
+    {
+      "kind": "youtube#video",
+      "etag": "\"uQc-MPTsstrHkQcRXL3IWLmeNsM/jO5xT1v5bXZJS6L_JeqlZfPm_rw\"",
+      "id": "dQIa1b4fefA",
+      "snippet": {
+        "publishedAt": "2016-05-23T21:23:22.000Z",
+        "channelId": "UCGPCcxdykgp6hgvL0XE3yaA",
+        "title": "Hugh’s Startup Vlog Episode #4 - First Week In Review",
+        "description": "#HughsStartupVlog",
+        "thumbnails": {
+          "default": {
+            "url": "https://i.ytimg.com/vi/dQIa1b4fefA/default.jpg",
+            "width": 120,
+            "height": 90
+          },
+          "medium": {
+            "url": "https://i.ytimg.com/vi/dQIa1b4fefA/mqdefault.jpg",
+            "width": 320,
+            "height": 180
+          },
+          "high": {
+            "url": "https://i.ytimg.com/vi/dQIa1b4fefA/hqdefault.jpg",
+            "width": 480,
+            "height": 360
+          },
+          "standard": {
+            "url": "https://i.ytimg.com/vi/dQIa1b4fefA/sddefault.jpg",
+            "width": 640,
+            "height": 480
+          },
+          "maxres": {
+            "url": "https://i.ytimg.com/vi/dQIa1b4fefA/maxresdefault.jpg",
+            "width": 1280,
+            "height": 720
+          }
+        },
+        "channelTitle": "Hugh Guiney",
+        "tags": [
+          "vlog",
+          "vlogging",
+          "startup",
+          "business",
+          "fun",
+          "productivity",
+          "work",
+          "frustration",
+          "balance",
+          "computers",
+          "web development"
+        ],
+        "categoryId": "22",
+        "liveBroadcastContent": "none",
+        "localized": {
+          "title": "Hugh’s Startup Vlog Episode #4 - First Week In Review",
+          "description": "#HughsStartupVlog"
+        }
+      },
+      "contentDetails": {
+        "duration": "PT6M11S",
+        "dimension": "2d",
+        "definition": "hd",
+        "caption": "false",
+        "licensedContent": true,
+        "projection": "rectangular",
+        "hasCustomThumbnail": false
+      },
+      "status": {
+        "uploadStatus": "processed",
+        "privacyStatus": "public",
+        "license": "youtube",
+        "embeddable": true,
+        "publicStatsViewable": true
+      },
+      "statistics": {
+        "viewCount": "22",
+        "likeCount": "0",
+        "dislikeCount": "0",
+        "favoriteCount": "0",
+        "commentCount": "0"
+      },
+      "player": {
+        "embedHtml": "<iframe width=\"480\" height=\"270\" src=\"//www.youtube.com/embed/dQIa1b4fefA\" frameborder=\"0\" allowfullscreen></iframe>"
+      },
+      "topicDetails": {
+        "relevantTopicIds": [
+          "/m/019_rr"
+        ],
+        "topicCategories": [
+          "https://en.wikipedia.org/wiki/Lifestyle_(sociology)"
+        ]
+      },
+      "fileDetails": {
+        "fileName": ""
+      },
+      "processingDetails": {
+        "processingStatus": "terminated"
+      }
+    }
+  ]
+}
