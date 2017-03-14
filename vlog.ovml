@@ -5,6 +5,7 @@
   xmlns:ovml="http://vocab.nospoon.tv/ovml#"
   xmlns:xlink="http://www.w3.org/1999/xlink"
   xmlns:oembed="http://oembed.com/"
+  xml:lang="en"
 >
   <meta>
     <!-- <link rel="glossary" xlink:href="/glossary.ovml" /> -->
