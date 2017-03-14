@@ -163,12 +163,12 @@ function updateXML( res ) {
   } );
 }
 
-// /videos/xml
+// /youtube-videos/xml
 router.get( '/xml', function ( req, res, next ) {
   updateXML( res );
 } );
 
-// videos
+// /youtube-videos
 router.get( '/', function ( req, res, next ) {
   if ( AUTH_TYPE === GOOGLE_OAUTH ) {
     if ( tokensExist() ) {
@@ -196,7 +196,7 @@ router.get( '/', function ( req, res, next ) {
   }
 } );
 
-// videos/oauth2callback
+// /youtube-videos/oauth2callback
 router.get( '/oauth2callback', function ( req, res, next ) {
   oauth.getToken( req.query.code, ( error, tokens ) => {
     Logger.log( 'Trying to get the token using the following code: ' + req.query.code );

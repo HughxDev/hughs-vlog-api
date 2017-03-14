@@ -8,7 +8,7 @@ var http           = require( 'http' );
 
 const Logger = require( 'bug-killer' );
 
-var videos = require( './routes/videos' );
+var youtubeVideos = require( './routes/youtube-videos' );
 // var oauth2callback = require( './routes/oauth2callback' );
 
 router.use(function( req, res, next ) {  
@@ -82,6 +82,6 @@ app.route( '/upload' )
 app.route( '/search' )
 ; // search
 
-app.use( '/videos', videos );
+app.use( '/youtube-videos', youtubeVideos );
 
 // app.use( '/oauth2callback', oauth2callback );
