@@ -39,7 +39,5 @@ Thumbs.db
 # Repo-specific
 node_modules/*
 temp/*
+google-apis/*
 sftp-config.json
-credentials.json
-service-account.json
-tokens.json
