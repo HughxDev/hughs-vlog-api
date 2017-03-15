@@ -22,7 +22,7 @@ router.get( '/', function ( req, res, next ) {
   var mode = 'xml';
   // var query=session.query(query)
   // var statement = 'for $i in 1 to 100 return <xml>Text { $i }</xml>';
-  var statement = fs.readFileSync( 'queries/videos.xq' );
+  var statement = fs.readFileSync( 'queries/get-videos.xq' );
   var query;
 
   function resultsCallback( error, reply ) {
