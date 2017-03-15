@@ -73,6 +73,28 @@ router.get( '/', function ( req, res, next ) {
   }
 
   // client.close(function () {});
-});
+} );
+
+router.get( '/search', function ( req, res, next ) {
+  var statement = fs.readFileSync( 'queries/find-title.xq' );
+  var query;
+
+  function executeCallback( error, reply ) {
+    if ( !error ) {
+      res.setHeader( 'Content-Type', 'application/xml' );
+      // Not sure why there are orphaned xmlns attributes in the result, but can't figure out a good way to remove them using XQuery
+      res.send( reply.result.replace( /\s?xmlns=['"]\s*['"]/g, '' ) );
+    } else {
+      res.status( 400 ).send( error );
+    }
+  }
+
+  statement += `\n\nf:findVideosByTitle( "Hugh's Startup Vlog Episode #0 - Introduction" )`;
+
+  query = client.query( statement );
+
+  // Executes the query and returns all results as a single string.
+  query.execute( executeCallback );
+} );
 
 module.exports = router;

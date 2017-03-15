@@ -10,19 +10,9 @@ declare namespace svg = "http://www.w3.org/2000/svg";
 
 declare boundary-space strip;
 
-declare function f:retrieveVideos() {
+declare function f:findVideosByTitle( $title as xs:string ) {
   let $vlog := db:open( 'hughs-vlog', 'vlog.ovml' )
   
-  for $video in $vlog//ovml:video
+  for $video in $vlog//ovml:video[ovml:title[text() contains text { $title } any word]]
     return f:strip-namespace( $video )
-};
-
-declare function f:getVideos( $wrap as xs:boolean ) {
-  if ( $wrap )
-  then
-    <ovml>{
-      f:retrieveVideos()
-    }</ovml>
-  else
-    f:retrieveVideos()
 };
