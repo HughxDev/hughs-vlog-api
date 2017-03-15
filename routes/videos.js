@@ -31,6 +31,8 @@ var client = new basex.Session( 'localhost', 1984, 'admin', 'admin' );
 
 basex.debug_mode = false;
 
+// @todo: DRYify
+
 // /videos
 router.get( '/', function ( req, res, next ) {
   // var mode = 'json';
@@ -109,6 +111,39 @@ router.get( '/search', function ( req, res, next ) {
 
   statement = eval( '`' + statement + '`' );
   statement += `\n\nf:findVideosByTitle( '${req.query.title}' )`;
+
+  query = client.query( statement );
+
+  // Executes the query and returns all results as a single string.
+  query.execute( executeCallback );
+} );
+
+// @todo change to post/put
+router.get( '/add', function ( req, res, next ) {
+  var statement = fs.readFileSync( 'queries/add-video.xq' );
+  var query;
+  var namespaces = getXQueryNamespaceDeclarations();
+
+  function executeCallback( error, reply ) {
+    if ( !error ) {
+      res.setHeader( 'Content-Type', 'application/xml' );
+      res.send( reply.result.replace( /\s?xmlns=['"]\s*['"]/g, '' ) );
+    } else {
+      res.status( 400 ).send( error );
+    }
+  }
+
+  var video = `
+    <video type="personal" xml:lang="en">
+      <title>Foo</title>
+      <description>Lorem ipsum</description>
+      <runtime>PT15M00S</runtime>
+      <published>${new Date().toISOString()}</published>
+    </video>
+  `;
+
+  statement = eval( '`' + statement + '`' );
+  statement += `\n\nf:addVideo( (), ${video} )`;
 
   query = client.query( statement );
 
