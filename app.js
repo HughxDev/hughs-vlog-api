@@ -8,8 +8,10 @@ var http           = require( 'http' );
 
 const Logger = require( 'bug-killer' );
 
+// External Routes
 var youtubeVideos = require( './routes/youtube-videos' );
 // var oauth2callback = require( './routes/oauth2callback' );
+var videos = require( './routes/videos.js' );
 
 router.use(function( req, res, next ) {  
   res.header( 'Access-Control-Allow-Origin', '*' );
@@ -27,6 +29,7 @@ app.listen( app.get( 'port' ), function () {
   console.log( 'Express up and listening on port ' + app.get('port') );
 } );
 
+// Routes
 app.route( '/' )
   .options( function ( req, res, next ) {
     res.status( 200 ).end();
@@ -81,6 +84,8 @@ app.route( '/upload' )
 
 app.route( '/search' )
 ; // search
+
+app.use( '/videos', videos );
 
 app.use( '/youtube-videos', youtubeVideos );
 
