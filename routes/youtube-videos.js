@@ -74,7 +74,8 @@ function getVideos( res ) {
     {
       "auth": auth,
       "part": "contentDetails",
-      "playlistId": "PLP0y6Eq5YpfQ_1l9JClXpzx7cUyr453Zr"
+      "playlistId": "PLP0y6Eq5YpfQ_1l9JClXpzx7cUyr453Zr",
+      "maxResults": 50
     },
     ( playlistItemsError, playlistItems ) => {
       var videoIds = [];
@@ -87,6 +88,7 @@ function getVideos( res ) {
         "auth": auth,
         "part": "contentDetails,fileDetails,id,liveStreamingDetails,localizations,player,processingDetails,recordingDetails,snippet,statistics,status,topicDetails",
         "id": videoIds.join( ',' )
+        // "maxResults": 50
       };
 
       // fileDetails, processingDetails, and suggestions require User Auth
