@@ -78,6 +78,7 @@ router.get( '/', function ( req, res, next ) {
 router.get( '/search', function ( req, res, next ) {
   var statement = fs.readFileSync( 'queries/find-title.xq' );
   var query;
+  // var title = req.query.title;
 
   function executeCallback( error, reply ) {
     if ( !error ) {
@@ -89,7 +90,7 @@ router.get( '/search', function ( req, res, next ) {
     }
   }
 
-  statement += `\n\nf:findVideosByTitle( "Hugh's Startup Vlog Episode #0 - Introduction" )`;
+  statement += `\n\nf:findVideosByTitle( '${req.query.title}' )`;
 
   query = client.query( statement );
 

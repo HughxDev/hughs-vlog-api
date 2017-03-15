@@ -14,5 +14,5 @@ declare function f:findVideosByTitle( $title as xs:string ) {
   let $vlog := db:open( 'hughs-vlog', 'vlog.ovml' )
   
   for $video in $vlog//ovml:video[ovml:title[text() contains text { $title } any word]]
-    return f:strip-namespace( $video )
+    return <ovml>{ f:strip-namespace( $video ) }</ovml>
 };
