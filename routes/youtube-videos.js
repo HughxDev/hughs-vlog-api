@@ -24,6 +24,10 @@ const GOOGLE_JWT_AUTH = 2;
 
 const AUTH_TYPE = GOOGLE_JWT_AUTH;
 
+const YOUTUBE_VIDEOS_CACHE_PATH = 'cache/youtube-videos.json';
+
+const ONE_DAY = 24 * 60 * 60 * 1000;
+
 var auth;
 
 switch ( AUTH_TYPE ) {
@@ -70,62 +74,87 @@ function authorize( callback ) {
 }
 
 function getVideos( res ) {
-  var playlistItems = yt.playlistItems.list(
-    {
-      "auth": auth,
-      "part": "contentDetails",
-      "playlistId": "PLP0y6Eq5YpfQ_1l9JClXpzx7cUyr453Zr",
-      "maxResults": 50
-    },
-    ( playlistItemsError, playlistItems ) => {
-      var videoIds = [];
+  fs.readFile( YOUTUBE_VIDEOS_CACHE_PATH, 'utf8', ( error, data ) => {
+    if ( !error ) {
+      fs.stat( YOUTUBE_VIDEOS_CACHE_PATH, function( error, stats ) {
+        // console.log( stats.mtime );
+        // res.send( stats );
+        var now = Date.now();
+        var mtime = Date.parse( stats.mtime );
+        var difference = now - mtime;
 
-      for ( var i = 0; i < playlistItems.items.length; i++ ) {
-        videoIds.push( playlistItems.items[i].contentDetails.videoId );
-      }
+        if ( difference >= ONE_DAY ) {
+          // refresh cache
+          var playlistItems = yt.playlistItems.list(
+            {
+              "auth": auth,
+              "part": "contentDetails",
+              "playlistId": "PLP0y6Eq5YpfQ_1l9JClXpzx7cUyr453Zr",
+              "maxResults": 50
+            },
+            ( playlistItemsError, playlistItems ) => {
+              var videoIds = [];
 
-      var videosListOptions = {
-        "auth": auth,
-        "part": "contentDetails,fileDetails,id,liveStreamingDetails,localizations,player,processingDetails,recordingDetails,snippet,statistics,status,topicDetails",
-        "id": videoIds.join( ',' )
-        // "maxResults": 50
-      };
+              for ( var i = 0; i < playlistItems.items.length; i++ ) {
+                videoIds.push( playlistItems.items[i].contentDetails.videoId );
+              }
 
-      // fileDetails, processingDetails, and suggestions require User Auth
-      /*
-      "contentDetails": {
-        "duration": "PT9M51S",
-        "dimension": "2d",
-        "definition": "hd",
-        "caption": "false",
-        "licensedContent": true,
-        "projection": "rectangular",
-        "hasCustomThumbnail": false
-      },
-      "processingDetails": {
-        "processingStatus": "terminated"
-      },
-      */
-      if ( AUTH_TYPE !== GOOGLE_OAUTH ) {
-        videosListOptions.part = videosListOptions.part.replace( /(?:fileDetails|processingDetails|suggestions),?/g, '' );
-      }
+              var videosListOptions = {
+                "auth": auth,
+                "part": "contentDetails,fileDetails,id,liveStreamingDetails,localizations,player,processingDetails,recordingDetails,snippet,statistics,status,topicDetails",
+                "id": videoIds.join( ',' )
+                // "maxResults": 50
+              };
 
-      var videos = yt.videos.list(
-        videosListOptions,
-        ( videosError, videos ) => {
+              // fileDetails, processingDetails, and suggestions require User Auth
+              // "contentDetails": {
+              //   "duration": "PT9M51S",
+              //   "dimension": "2d",
+              //   "definition": "hd",
+              //   "caption": "false",
+              //   "licensedContent": true,
+              //   "projection": "rectangular",
+              //   "hasCustomThumbnail": false
+              // },
+              // "processingDetails": {
+              //   "processingStatus": "terminated"
+              // },
+              if ( AUTH_TYPE !== GOOGLE_OAUTH ) {
+                videosListOptions.part = videosListOptions.part.replace( /(?:fileDetails|processingDetails|suggestions),?/g, '' );
+              }
+
+              var videos = yt.videos.list(
+                videosListOptions,
+                ( videosError, videos ) => {
+                  res.setHeader( 'Content-Type', 'application/json' );
+                  
+                  if ( videosError ) {
+                    res.status( 400 ).send( videosError );
+
+                    return Logger.log( videosError );
+                  }
+
+                  // @todo: Over 50 results
+                  // if ( 'nextPageToken' in videos ) {
+                  // }
+
+                  fs.writeFile( "cache/youtube-videos.json", JSON.stringify( videos ), "utf8", function () {} );
+
+                  res.send( videos );
+                }
+              );
+            }
+          );
+        } else {
+          // use cache
           res.setHeader( 'Content-Type', 'application/json' );
-          
-          if ( videosError ) {
-            res.status( 400 ).send( videosError );
-
-            return Logger.log( videosError );
-          }
-          
-          res.send( videos );
+          res.send( data );
         }
-      );
+      } );
+    } else {
+      res.send( error );
     }
-  );
+  } );
 }
 
 function getTokens() {
@@ -169,6 +198,22 @@ function tokensExist() {
 // router.get( '/xml', function ( req, res, next ) {
 //   updateXML( res );
 // } );
+
+function youtubeJSONtoHVML() {
+/*
+  for each item:
+    <video type="personal" xml:lang="XX" xml:id="ep-XXX">
+      snippet.defaultAudioLanguage → @xml:lang
+      snippet.title → <title>
+      snippet.description → <description type="xhtml"><div xmlns>
+      snippet.tags → <tags><tag>
+      contentDetails.duration → <runtime>
+      id → <showing scope="release" type="internet" admission="public">
+             <uri>https://www.youtube.com/watch?v=XXXX</uri>
+      recordingDetails ?
+        .recordingDate → <recorded>
+*/
+}
 
 // /youtube-videos
 router.get( '/', function ( req, res, next ) {
