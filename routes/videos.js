@@ -2,6 +2,7 @@ var express = require( 'express' );
 var router = express.Router();
 var basex  = require( 'basex' );
 var fs = require( 'fs' );
+const Logger = require( 'bug-killer' );
 
 const NS = {
   "": "http://vocab.nospoon.tv/ovml#",
@@ -25,6 +26,34 @@ function getXQueryNamespaceDeclarations() {
   }
 
   return namespaces;
+}
+
+function replaceFeed( feed, req, res ) {
+  var client = new basex.Session( 'localhost', 1984, 'admin', 'admin' );
+  var statement = fs.readFileSync( 'queries/replace-feed.xq' );
+  var query;
+  // var namespaces = getXQueryNamespaceDeclarations();
+
+  function executeCallback( error, reply ) {
+    if ( !error ) {
+      res.setHeader( 'Content-Type', 'application/xml' );
+      res.send( reply.result.replace( /\s?xmlns=['"]\s*['"]/g, '' ) );
+    } else {
+      res.status( 400 ).send( error );
+    }
+  }
+
+  feed = feed.replace( /<\?xml\s+version="[0-9]+\.[0-9]+"\s+encoding="[^"]+"\?>\n?/gi, '' );
+
+  statement = eval( '`' + statement + '`' );
+  statement += `\n\nf:replaceFeed( ${feed} )`;
+
+  Logger.log( statement );
+
+  query = client.query( statement );
+
+  // Executes the query and returns all results as a single string.
+  query.execute( executeCallback );
 }
 
 var client = new basex.Session( 'localhost', 1984, 'admin', 'admin' );
@@ -93,7 +122,7 @@ router.get( '/', function ( req, res, next ) {
 } );
 
 router.get( '/search', function ( req, res, next ) {
-  var statement = fs.readFileSync( 'queries/find-title.xq' );
+  var statement = fs.readFileSync( 'queries/find.xq' );
   var query;
   var namespaces = getXQueryNamespaceDeclarations();
 
@@ -110,7 +139,14 @@ router.get( '/search', function ( req, res, next ) {
   }
 
   statement = eval( '`' + statement + '`' );
-  statement += `\n\nf:findVideosByTitle( '${req.query.title}' )`;
+
+  if ( 'title' in req.query ) {
+    statement += `\n\nf:findVideosByTitle( '${req.query.title}' )`;
+  } else if ( 'published' in req.query ) {
+    statement += `\n\nf:findVideosByPublishedDate( '${req.query.published}' )`;
+  } else if ( ( 'publishedMin' in req.query ) && ( 'publishedMax' in req.query ) ) {
+    statement += `\n\nf:findVideosByPublishedDateRange( '${req.query.publishedMin}', '${req.query.publishedMax}' )`;
+  }
 
   query = client.query( statement );
 
@@ -151,4 +187,7 @@ router.get( '/add', function ( req, res, next ) {
   query.execute( executeCallback );
 } );
 
-module.exports = router;
+module.exports = {
+  "router": router,
+  "replaceFeed": replaceFeed
+};

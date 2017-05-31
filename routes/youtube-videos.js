@@ -13,6 +13,8 @@ const opn = require( 'opn' );
 const libxmljs = require( 'libxmljs' );
 const marked = require( 'marked' );
 
+const replaceFeed = require( `${__dirname}/videos.js` ).replaceFeed;
+
 const OVMLpath = `${__dirname}/../vlog.ovml`;
 const tokensPath = `${__dirname}/../tokens.json`;
 
@@ -84,7 +86,7 @@ function authorize( callback ) {
   });
 }
 
-function getVideos( res ) {
+function getVideos( callback ) {
   fs.readFile( YOUTUBE_VIDEOS_CACHE_PATH, 'utf8', ( error, data ) => {
     if ( !error ) {
       fs.stat( YOUTUBE_VIDEOS_CACHE_PATH, function( error, stats ) {
@@ -139,11 +141,12 @@ function getVideos( res ) {
                 ( videosError, videos ) => {
                   res.setHeader( 'Content-Type', 'application/json' );
                   
-                  if ( videosError ) {
-                    res.status( 400 ).send( videosError );
+                  // @todo
+                  // if ( videosError ) {
+                  //   res.status( 400 ).send( videosError );
 
-                    return Logger.log( videosError );
-                  }
+                  //   return Logger.log( videosError );
+                  // }
 
                   // @todo: Over 50 results
                   // if ( 'nextPageToken' in videos ) {
@@ -152,10 +155,10 @@ function getVideos( res ) {
                   fs.writeFile( "cache/youtube-videos.json", JSON.stringify( videos ), "utf8", function () {} );
 
                   // res.send( videos );
-                  res.setHeader( 'Content-Type', 'application/xml' );
-                  res.send(
-                    youtubeJSONtoHVML( videos )
-                  );
+                  // res.setHeader( 'Content-Type', 'application/xml' );
+                  // res.send(
+                    callback( youtubeJSONtoHVML( videos ) );
+                  // );
                 }
               );
             }
@@ -165,14 +168,15 @@ function getVideos( res ) {
           // res.setHeader( 'Content-Type', 'application/json' );
           // res.send( data );
 
-          res.setHeader( 'Content-Type', 'application/xml' );
-          res.send(
-            youtubeJSONtoHVML( data, res )
-          );
+          // res.setHeader( 'Content-Type', 'application/xml' );
+          // res.send(
+            callback( youtubeJSONtoHVML( data ) );
+          // );
         }
       } );
     } else {
-      res.send( error );
+      // res.send( error );
+      callback( null, error );
     }
   } );
 }
@@ -219,7 +223,7 @@ function tokensExist() {
 //   updateXML( res );
 // } );
 
-function youtubeJSONtoHVML( json, res ) {
+function youtubeJSONtoHVML( json ) {
 /*
   for each item:
     <video type="personal" xml:lang="XX" xml:id="ep-XXX">
@@ -596,7 +600,15 @@ router.get( '/', function ( req, res, next ) {
 
         Logger.log( 'Using saved tokens.' );
 
-        getVideos( res );
+        // @todo setHeader
+        getVideos(function ( data, error ) {
+          if ( !error ) {
+            res.setHeader( 'Content-Type', 'application/xml' );
+            res.send( data );
+          } else {
+            res.status( 500 ).send( error );
+          }
+        });
         // next();
       } else {
         Logger.log( 'Saved tokens are expired; refreshing...' );
@@ -610,9 +622,28 @@ router.get( '/', function ( req, res, next ) {
     }
   } else {
     authorize( function () {
-      getVideos( res );
+      // @todo setHeader
+      getVideos(function ( data, error ) {
+        if ( !error ) {
+          res.setHeader( 'Content-Type', 'application/xml' );
+          res.send( data );
+        } else {
+          res.status( 500 ).send( error );
+        }
+      });
     } );
   }
+} );
+
+router.get( '/sync', function ( req, res, next ) {
+  getVideos( function ( data, error ) {
+    if ( !error ) {
+      // res.send( data );
+      replaceFeed( data, req, res );
+    } else {
+      res.status( 500 ).send( error );
+    }
+  } );
 } );
 
 // /youtube-videos/oauth2callback
@@ -640,7 +671,14 @@ router.get( '/oauth2callback', function ( req, res, next ) {
     // Channel ID: UCGPCcxdykgp6hgvL0XE3yaA
     // Playlist ID - Entire Series: PLP0y6Eq5YpfQ_1l9JClXpzx7cUyr453Zr
 
-    getVideos( res );
+    getVideos(function ( data, error ) {
+      if ( !error ) {
+        res.setHeader( 'Content-Type', 'application/xml' );
+        res.send( data );
+      } else {
+        res.status( 500 ).send( error );
+      }
+    });
   } );
 } );
 

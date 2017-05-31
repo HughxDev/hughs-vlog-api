@@ -85,7 +85,7 @@ app.route( '/upload' )
 app.route( '/search' )
 ; // search
 
-app.use( '/videos', videos );
+app.use( '/videos', videos.router );
 
 app.use( '/youtube-videos', youtubeVideos );
 
