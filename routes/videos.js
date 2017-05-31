@@ -95,7 +95,11 @@ router.get( '/', function ( req, res, next ) {
 
   switch ( mode ) {
     case 'json':
-      statement += "\n\nf:getVideos( false() )";
+      if ( 'limit' in req.query ) {
+        statement += `\n\nf:getVideos( false(), ${req.query.limit} )`;
+      } else {
+        statement += "\n\nf:getVideos( false(), () )";
+      }
 
       query = client.query( statement );
 
@@ -109,7 +113,11 @@ router.get( '/', function ( req, res, next ) {
 
     case 'xml':
     default:
-      statement += "\n\nf:getVideos( true() )";
+      if ( 'limit' in req.query ) {
+        statement += `\n\nf:getVideos( true(), ${req.query.limit} )`;
+      } else {
+        statement += "\n\nf:getVideos( true(), () )";
+      }
 
       query = client.query( statement );
 
