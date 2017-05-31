@@ -11,6 +11,7 @@ const Logger = require( 'bug-killer' );
 const readJson = require( 'r-json' );
 const opn = require( 'opn' );
 const libxmljs = require( 'libxmljs' );
+const marked = require( 'marked' );
 
 const OVMLpath = `${__dirname}/../vlog.ovml`;
 const tokensPath = `${__dirname}/../tokens.json`;
@@ -25,10 +26,16 @@ const GOOGLE_JWT_AUTH = 2;
 const AUTH_TYPE = GOOGLE_JWT_AUTH;
 
 const YOUTUBE_VIDEOS_CACHE_PATH = 'cache/youtube-videos.json';
+const YOUTUBE_WATCH_URL_PREFIX = 'https://www.youtube.com/watch?v=';
 
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
 var auth;
+// var markedRenderer = new marked.Renderer();
+
+// markedRenderer.paragraph = function(text) {
+//   return text + '\n';
+// };
 
 switch ( AUTH_TYPE ) {
   case GOOGLE_SIMPLE_AUTH:
@@ -60,6 +67,10 @@ switch ( AUTH_TYPE ) {
   break;
 }
 
+marked.setOptions({
+  "breaks": true
+});
+
 function authorize( callback ) {
   auth.authorize( function ( error, tokens ) {
     if ( error ) {
@@ -81,9 +92,9 @@ function getVideos( res ) {
         // res.send( stats );
         var now = Date.now();
         var mtime = Date.parse( stats.mtime );
-        var difference = now - mtime;
+        var cacheAge = now - mtime;
 
-        if ( difference >= ONE_DAY ) {
+        if ( cacheAge >= ONE_DAY ) {
           // refresh cache
           var playlistItems = yt.playlistItems.list(
             {
@@ -140,15 +151,24 @@ function getVideos( res ) {
 
                   fs.writeFile( "cache/youtube-videos.json", JSON.stringify( videos ), "utf8", function () {} );
 
-                  res.send( videos );
+                  // res.send( videos );
+                  res.setHeader( 'Content-Type', 'application/xml' );
+                  res.send(
+                    youtubeJSONtoHVML( videos )
+                  );
                 }
               );
             }
           );
         } else {
           // use cache
-          res.setHeader( 'Content-Type', 'application/json' );
-          res.send( data );
+          // res.setHeader( 'Content-Type', 'application/json' );
+          // res.send( data );
+
+          res.setHeader( 'Content-Type', 'application/xml' );
+          res.send(
+            youtubeJSONtoHVML( data, res )
+          );
         }
       } );
     } else {
@@ -199,20 +219,372 @@ function tokensExist() {
 //   updateXML( res );
 // } );
 
-function youtubeJSONtoHVML() {
+function youtubeJSONtoHVML( json, res ) {
 /*
   for each item:
     <video type="personal" xml:lang="XX" xml:id="ep-XXX">
-      snippet.defaultAudioLanguage → @xml:lang
-      snippet.title → <title>
-      snippet.description → <description type="xhtml"><div xmlns>
-      snippet.tags → <tags><tag>
-      contentDetails.duration → <runtime>
-      id → <showing scope="release" type="internet" admission="public">
-             <uri>https://www.youtube.com/watch?v=XXXX</uri>
-      recordingDetails ?
-        .recordingDate → <recorded>
+      ✔︎ snippet.defaultAudioLanguage → @xml:lang
+      ✔ snippet.title → <title>
+      ✔ snippet.description → <description type="xhtml"><div xmlns>
+        snippet.tags → <tags><tag>
+      ✔ contentDetails.duration → <runtime>
+      ✔ id → <showing scope="release" type="internet" admission="public">
+               <uri>https://www.youtube.com/watch?v=XXXX</uri>
+      ✔ recordingDetails ?
+          .recordingDate → <recorded>
 */
+  json = JSON.parse( json );
+
+  function getRecordingDate( item ) {
+    // check if metadata version exists
+    if ( ( 'recordingDetails' in item ) && ( 'recordingDate' in item.recordingDetails ) ) {
+      return item.recordingDetails.recordingDate.replace( 'T00:00:00.000Z', '' );
+    }
+
+    // if not check if text version exists
+    if ( ( 'snippet' in item ) && ( 'description' in item.snippet ) ) {
+      var regex = /Recorded:\s+([0-9]{4,}-[0-9]{2}-[0-9]{2})/gi;
+      var matches = regex.exec( item.snippet.description );
+
+      if ( matches ) {
+        return matches[1];
+      }
+    }
+
+    return null;
+  }
+
+  function getEpisodeCatalogParts( item ) {
+    var regex;
+    var matches;
+
+    if ( 'snippet' in item ) {
+      // New episodes:
+      if ( 'description' in item.snippet ) {
+        /*
+          $0: Episode: S02E01 (#9)
+          $1: S02E01
+          $2: 02
+          $3: 01
+          $4: 9
+        */
+        regex = /Episode:\s+(S([0-9]{2,})(?:\s+)?E([0-9]{2,}))\s+\(#([0-9]+)\)/gi;
+        matches = regex.exec( item.snippet.description );
+
+        if ( matches ) {
+          return matches;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function getEpisodeNumber( item ) {
+    var regex;
+    var matches;
+
+    // New episodes:
+    var catalogParts = getEpisodeCatalogParts( item );
+
+    if ( catalogParts ) {
+      return catalogParts[4];
+    }
+
+    if ( 'snippet' in item ) {
+      // Old episodes:
+      if ( 'title' in item.snippet ) {
+        regex = /Episode\s+#([0-9]+)/gi;
+        matches = regex.exec( item.snippet.title );
+
+        if ( matches ) {
+          return matches[1];
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function getSeasonNumber( item, episodeNumber ) {
+    var catalogParts = getEpisodeCatalogParts( item );
+    var seasonOneUpperLimit = 8;
+
+    if ( catalogParts ) {
+      return catalogParts[2];
+    }
+
+    episodeNumber = parseInt( episodeNumber || getEpisodeNumber(), 10 );
+
+    if ( episodeNumber <= seasonOneUpperLimit ) {
+      return '01';
+    }
+
+    return null;
+  }
+
+  function getCanonicalTitle( title ) {
+    var extraneousTitlingRegex = /(?:\s+[-|]\s+)?(?:(?:Hugh['’‘]s\s+(?:\[?Startup\]?\s+)?Vlog(?:\s+Episode\s+#[0-9]+(?:\s+-\s+|:\s+))?)|\s+.\s+#.+)/gi;
+    
+    var cleanTitle = title.replace( extraneousTitlingRegex, '' ).replace( /['‘’"“”](.+)['‘’"“”]/g, '$1' );
+
+    return cleanTitle;
+  }
+
+  function getCanonicalDescription( description ) {
+    // Logger.log(
+    var cleanDescription =
+      description.split( '\n\n' )
+        .filter(function ( text ) {
+          return text.indexOf( 'Watch on Facebook: ' ) === -1;
+        } )
+        .filter(function ( text ) {
+          return text.indexOf( 'Follow Me\n' ) === -1;
+        } )
+        .filter(function ( text ) {
+          return text.indexOf( 'Episode: ' ) === -1;
+        } )
+        .filter(function ( text ) {
+          return text.indexOf( 'Referenced Works' ) === -1;
+        } )
+        .filter(function ( text ) {
+          return text.indexOf( 'License: ' ) === -1;
+        } )
+        .filter(function ( text ) {
+          return text.indexOf( 'via SoundCloud: ' ) === -1;
+        } )
+        .filter(function ( text ) {
+          return text.indexOf( 'Follow me on ' ) === -1;
+        } )
+        .filter(function ( text ) {
+          return ( text.replace( /(#[^\s]+)/g, '' ).trim() !== '' );
+        } )
+        .join( '\n\n' )
+    ;
+
+    // Logger.log( cleanDescription );
+
+    return cleanDescription;
+    // );
+  }
+
+  var defaultLanguage = 'en';
+
+  var ovml = libxmljs.parseXml(
+    `<?xml version="1.0" encoding="UTF-8"?>
+    <ovml
+      xmlns="http://vocab.nospoon.tv/ovml#"
+      xmlns:ovml="http://vocab.nospoon.tv/ovml#"
+      xmlns:xlink="http://www.w3.org/1999/xlink"
+      xmlns:oembed="http://oembed.com/"
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      xml:lang="${defaultLanguage}"
+    >
+      <group xml:id="hughs-vlog" type="series">
+        <!-- <group xml:id="season-x" type="series"></group> -->
+      </group>
+    </ovml>`
+  );
+
+  var namespaces = {
+    "ovml": "http://vocab.nospoon.tv/ovml#",
+    "xlink": "http://www.w3.org/1999/xlink",
+    "oembed": "http://oembed.com/",
+    "html": "http://www.w3.org/1999/xhtml"
+  };
+
+  // var seasonX = ovml.find( '//ovml:group[@xml:id="season-x"]', namespaces )[0];
+  var hughsVlog = ovml.find( '//ovml:group[@xml:id="hughs-vlog"]', namespaces )[0];
+
+  var
+    canonicalDescription,
+    contentDetails,
+    currentItem,
+    episode,
+    episodeNumber,
+    description,
+    descriptionDiv,
+    published,
+    publishedParts,
+    publishedDay,
+    publishedTime,
+    recorded,
+    recordingDate,
+    runtime,
+    showing,
+    snippet,
+    seasonGroup,
+    seasonNumber,
+    season,
+    venue,
+    venueEntity,
+    video,
+    youtubeDescription
+  ;
+
+  for (var i = 0; i < json.items.length; i++) {
+    currentItem = json.items[i];
+    snippet = currentItem.snippet;
+    contentDetails = currentItem.contentDetails;
+    episodeNumber = getEpisodeNumber( currentItem );
+
+    // <video>
+    video = new libxmljs.Element( ovml, 'video' );
+    video.attr({
+      "type": "personal",
+      "xml:id": "ep-" + episodeNumber
+    });
+
+    if (
+      'defaultAudioLanguage' in currentItem.snippet
+      && currentItem.snippet.defaultAudioLanguage !== defaultLanguage
+    ) {
+      video.attr({
+        "xml:lang": currentItem.snippet.defaultAudioLanguage
+      });
+    }
+
+    // <title>
+    video.addChild( new libxmljs.Element( ovml, 'title', getCanonicalTitle( snippet.title ) ) );
+
+    // <episode>
+    episode = new libxmljs.Element( ovml, 'episode', episodeNumber );
+    video.addChild( episode );
+
+    // <runtime>
+    runtime = new libxmljs.Element( ovml, 'runtime', contentDetails.duration );
+
+    video.addChild( runtime );
+
+    // <recorded>
+    recordingDate = getRecordingDate( currentItem );
+
+    if ( recordingDate ) {
+      recorded = new libxmljs.Element( ovml, 'recorded', recordingDate );
+
+      video.addChild( recorded );
+    }
+
+    // <published>
+    published = new libxmljs.Element( ovml, 'published', snippet.publishedAt );
+
+    publishedParts = snippet.publishedAt.split( 'T' );
+
+    publishedDay = publishedParts[0];
+    publishedTime = publishedParts[1];
+
+    video.addChild( published );
+
+    // <description>
+    canonicalDescription = getCanonicalDescription( snippet.description );
+
+    if ( canonicalDescription.trim() !== '' ) {
+      description = new libxmljs.Element( ovml, 'description' ).attr({ "type": "xhtml" });
+      
+      description.addChild(
+        libxmljs.parseHtmlFragment(
+          // marked( snippet.description.trim() )
+          '<div>' + marked( canonicalDescription ) + '</div>'
+          // markedRenderer( snippet.description )
+          // marked.inlineLexer( snippet.description, [] )
+        ).root().namespace( namespaces.html )
+      );
+
+      video.addChild( description );
+    }
+
+    // <showing scope="release" type="internet" admission="public">
+    showing = new libxmljs.Element( ovml, 'showing' );
+    showing.attr({
+      "scope": "release",
+      "type": "internet",
+      "admission": "public",
+      "datetime": publishedDay
+    });
+
+    /*
+      <showing scope="release" type="internet" admission="public" datetime="2017-09-14">
+        <venue type="site">
+          <entity site="http://hugh.today/">hugh.today</entity>
+          <uri>http://hugh.today/2017-09-14</uri>
+        </venue>
+        <venue type="site">
+          <entity site="https://www.youtube.com/">YouTube</name>
+          <uri>https://www.youtube.com/watch?v=aEmmNJHzjTw</uri>
+        </venue>
+        <venue type="site">
+          <entity site="https://www.facebook.com/">Facebook</entity>
+          <uri>https://www.facebook.com/HughsVlog/videos/1928756370692126/</uri>
+        </venue>
+      </showing>
+    */
+
+    venue = new libxmljs.Element( ovml, 'venue' );
+    venue.attr({
+      "type": "site",
+      "datetime": publishedTime
+    });
+
+    venueEntity = new libxmljs.Element( ovml, 'entity', 'YouTube' );
+    venueEntity.attr({
+      "site": "https://www.youtube.com/"
+    });
+    
+    venue.addChild( venueEntity );
+    venue.addChild( new libxmljs.Element( ovml, 'uri', YOUTUBE_WATCH_URL_PREFIX + currentItem.id ) );
+    venue.addChild( new libxmljs.Element( ovml, 'title', snippet.title ) );
+
+    if ( snippet.description.trim() !== '' ) {
+      youtubeDescription = new libxmljs.Element( ovml, 'description' );
+      youtubeDescription.attr({
+        "type": "xhtml"
+      });
+
+      // descriptionDiv = new libxmljs.Element( ovml, 'div' ).namespace( namespaces.html );
+      youtubeDescription.addChild(
+        libxmljs.parseHtmlFragment(
+          // marked( snippet.description.trim() )
+          '<div>' + marked( snippet.description ) + '</div>'
+          // markedRenderer( snippet.description )
+          // marked.inlineLexer( snippet.description, [] )
+        ).root().namespace( namespaces.html )
+      );
+
+      venue.addChild( youtubeDescription );
+    }
+
+    showing.addChild( venue );
+
+    video.addChild( showing );
+
+    // Call last
+    // seasonX.addChild( video );
+    seasonNumber = getSeasonNumber( currentItem, episodeNumber );
+
+    if ( seasonNumber ) {
+      seasonGroup = ovml.find( '//group[@xml:id="season-' + seasonNumber + '"]', namespaces );
+
+      // Logger.log( seasonGroup );
+
+      if ( seasonGroup && seasonGroup.length ) {
+        seasonGroup[0].addChild( video );
+      } else {
+        season = new libxmljs.Element( ovml, 'group' );
+        season.attr({
+          "xml:id": "season-" + seasonNumber,
+          "type": "series"
+        });
+
+        season.addChild( new libxmljs.Element( ovml, 'title', 'Season ' + parseInt( seasonNumber, 10 ) ) );
+
+        season.addChild( video );
+
+        hughsVlog.addChild( season );
+      }
+    }
+  }
+
+  return ovml.toString();
 }
 
 // /youtube-videos

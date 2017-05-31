@@ -18,6 +18,7 @@
     "googleapis": "^18.0.0",
     "http": "0.0.0",
     "libxmljs": "^0.18.4",
+    "marked": "^0.3.6",
     "method-override": "^2.3.7",
     "morgan": "^1.8.1",
     "opn": "^4.0.2",
