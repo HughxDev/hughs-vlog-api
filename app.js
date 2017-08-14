@@ -5,6 +5,7 @@ var methodOverride = require( 'method-override' );
 var app            = express();  
 var router         = express.Router();
 var http           = require( 'http' );
+// var xmlparser      = require( 'express-xml-bodyparser' );
 
 const Logger = require( 'bug-killer' );
 
@@ -23,6 +24,12 @@ router.use(function( req, res, next ) {
 
 app.use( '/', router );
 
+app.use( bodyParser.text({
+  // "type": "application/xml"
+  "type": "*/*"
+}) );
+// app.use( xmlparser() );
+
 app.set( 'port', process.env.PORT || 3000 );
 
 app.listen( app.get( 'port' ), function () {  
@@ -36,7 +43,7 @@ app.route( '/' )
 
     next();
   } )
-  .get( function ( req, res ) {
+  .get( function ( req, res ) { 
     res.send( 'hello' );
   } )
 ; // /

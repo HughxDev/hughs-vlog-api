@@ -195,6 +195,12 @@ router.get( '/add', function ( req, res, next ) {
   query.execute( executeCallback );
 } );
 
+router.put( '/replace', function ( req, res, next ) {
+  res.setHeader( 'Content-Type', 'application/xml' );
+  // res.send( req.body );
+  replaceFeed( req.body, req, res );
+} );
+
 module.exports = {
   "router": router,
   "replaceFeed": replaceFeed

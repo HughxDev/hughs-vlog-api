@@ -15,5 +15,5 @@ declare %updating function f:replaceFeed(
 ) {
   let $vlog := db:open( 'hughs-vlog', 'vlog.hvml' )
 
-  return replace node $vlog/hvml with $feed
+  return replace node $vlog/* with $feed
 };
