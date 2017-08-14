@@ -15,7 +15,7 @@ const marked = require( 'marked' );
 
 const replaceFeed = require( `${__dirname}/videos.js` ).replaceFeed;
 
-const OVMLpath = `${__dirname}/../vlog.ovml`;
+const HVMLpath = `${__dirname}/../vlog.hvml`;
 const tokensPath = `${__dirname}/../tokens.json`;
 
 const GOOGLE_WEB_CLIENT_CREDENTIALS = readJson( `${__dirname}/../google-apis/web-client.json` );
@@ -197,24 +197,24 @@ function tokensExist() {
 }
 
 // function updateXML( res ) {
-//   var file = fs.readFile( OVMLpath, 'utf8', function ( error, data ) {
+//   var file = fs.readFile( HVMLpath, 'utf8', function ( error, data ) {
 //     // res.send(  data );
-//     var ovml = libxmljs.parseXmlString( data );
+//     var hvml = libxmljs.parseXmlString( data );
 
 //     // res.send(
-//     var node = ovml.root().find(
-//         '//ovml:video[1]',
+//     var node = hvml.root().find(
+//         '//hvml:video[1]',
 //         {
-//           ovml: 'http://vocab.nospoon.tv/ovml#'
+//           hvml: 'http://vocab.nospoon.tv/ovml#'
 //         }
 //       )[0]
 //     ;
 
-//     node.addChild( new libxmljs.Element( ovml, 'element-name', 'text' ) );
+//     node.addChild( new libxmljs.Element( hvml, 'element-name', 'text' ) );
     
-//     // res.setHeader( 'Content-Type', 'application/ovml+xml' );
+//     // res.setHeader( 'Content-Type', 'application/hvml+xml' );
 //     res.setHeader( 'Content-Type', 'application/xml' );
-//     res.send( ovml.toString() );
+//     res.send( hvml.toString() );
 //   } );
 // }
 
@@ -374,11 +374,11 @@ function youtubeJSONtoHVML( json ) {
 
   var defaultLanguage = 'en';
 
-  var ovml = libxmljs.parseXml(
+  var hvml = libxmljs.parseXml(
     `<?xml version="1.0" encoding="UTF-8"?>
-    <ovml
+    <hvml
       xmlns="http://vocab.nospoon.tv/ovml#"
-      xmlns:ovml="http://vocab.nospoon.tv/ovml#"
+      xmlns:hvml="http://vocab.nospoon.tv/ovml#"
       xmlns:xlink="http://www.w3.org/1999/xlink"
       xmlns:oembed="http://oembed.com/"
       xmlns:html="http://www.w3.org/1999/xhtml"
@@ -387,18 +387,18 @@ function youtubeJSONtoHVML( json ) {
       <group xml:id="hughs-vlog" type="series">
         <!-- <group xml:id="season-x" type="series"></group> -->
       </group>
-    </ovml>`
+    </hvml>`
   );
 
   var namespaces = {
-    "ovml": "http://vocab.nospoon.tv/ovml#",
+    "hvml": "http://vocab.nospoon.tv/ovml#",
     "xlink": "http://www.w3.org/1999/xlink",
     "oembed": "http://oembed.com/",
     "html": "http://www.w3.org/1999/xhtml"
   };
 
-  // var seasonX = ovml.find( '//ovml:group[@xml:id="season-x"]', namespaces )[0];
-  var hughsVlog = ovml.find( '//ovml:group[@xml:id="hughs-vlog"]', namespaces )[0];
+  // var seasonX = hvml.find( '//hvml:group[@xml:id="season-x"]', namespaces )[0];
+  var hughsVlog = hvml.find( '//hvml:group[@xml:id="hughs-vlog"]', namespaces )[0];
 
   var
     canonicalDescription,
@@ -433,7 +433,7 @@ function youtubeJSONtoHVML( json ) {
     episodeNumber = getEpisodeNumber( currentItem );
 
     // <video>
-    video = new libxmljs.Element( ovml, 'video' );
+    video = new libxmljs.Element( hvml, 'video' );
     video.attr({
       "type": "personal",
       "xml:id": "ep-" + episodeNumber
@@ -449,14 +449,14 @@ function youtubeJSONtoHVML( json ) {
     }
 
     // <title>
-    video.addChild( new libxmljs.Element( ovml, 'title', getCanonicalTitle( snippet.title ) ) );
+    video.addChild( new libxmljs.Element( hvml, 'title', getCanonicalTitle( snippet.title ) ) );
 
     // <episode>
-    episode = new libxmljs.Element( ovml, 'episode', episodeNumber );
+    episode = new libxmljs.Element( hvml, 'episode', episodeNumber );
     video.addChild( episode );
 
     // <runtime>
-    runtime = new libxmljs.Element( ovml, 'runtime', contentDetails.duration );
+    runtime = new libxmljs.Element( hvml, 'runtime', contentDetails.duration );
 
     video.addChild( runtime );
 
@@ -464,13 +464,13 @@ function youtubeJSONtoHVML( json ) {
     recordingDate = getRecordingDate( currentItem );
 
     if ( recordingDate ) {
-      recorded = new libxmljs.Element( ovml, 'recorded', recordingDate );
+      recorded = new libxmljs.Element( hvml, 'recorded', recordingDate );
 
       video.addChild( recorded );
     }
 
     // <published>
-    published = new libxmljs.Element( ovml, 'published', snippet.publishedAt );
+    published = new libxmljs.Element( hvml, 'published', snippet.publishedAt );
 
     publishedParts = snippet.publishedAt.split( 'T' );
 
@@ -483,7 +483,7 @@ function youtubeJSONtoHVML( json ) {
     canonicalDescription = getCanonicalDescription( snippet.description );
 
     if ( canonicalDescription.trim() !== '' ) {
-      description = new libxmljs.Element( ovml, 'description' ).attr({ "type": "xhtml" });
+      description = new libxmljs.Element( hvml, 'description' ).attr({ "type": "xhtml" });
       
       description.addChild(
         libxmljs.parseHtmlFragment(
@@ -498,7 +498,7 @@ function youtubeJSONtoHVML( json ) {
     }
 
     // <showing scope="release" type="internet" admission="public">
-    showing = new libxmljs.Element( ovml, 'showing' );
+    showing = new libxmljs.Element( hvml, 'showing' );
     showing.attr({
       "scope": "release",
       "type": "internet",
@@ -523,28 +523,28 @@ function youtubeJSONtoHVML( json ) {
       </showing>
     */
 
-    venue = new libxmljs.Element( ovml, 'venue' );
+    venue = new libxmljs.Element( hvml, 'venue' );
     venue.attr({
       "type": "site",
       "datetime": publishedTime
     });
 
-    venueEntity = new libxmljs.Element( ovml, 'entity', 'YouTube' );
+    venueEntity = new libxmljs.Element( hvml, 'entity', 'YouTube' );
     venueEntity.attr({
       "site": "https://www.youtube.com/"
     });
     
     venue.addChild( venueEntity );
-    venue.addChild( new libxmljs.Element( ovml, 'uri', YOUTUBE_WATCH_URL_PREFIX + currentItem.id ) );
-    venue.addChild( new libxmljs.Element( ovml, 'title', snippet.title ) );
+    venue.addChild( new libxmljs.Element( hvml, 'uri', YOUTUBE_WATCH_URL_PREFIX + currentItem.id ) );
+    venue.addChild( new libxmljs.Element( hvml, 'title', snippet.title ) );
 
     if ( snippet.description.trim() !== '' ) {
-      youtubeDescription = new libxmljs.Element( ovml, 'description' );
+      youtubeDescription = new libxmljs.Element( hvml, 'description' );
       youtubeDescription.attr({
         "type": "xhtml"
       });
 
-      // descriptionDiv = new libxmljs.Element( ovml, 'div' ).namespace( namespaces.html );
+      // descriptionDiv = new libxmljs.Element( hvml, 'div' ).namespace( namespaces.html );
       youtubeDescription.addChild(
         libxmljs.parseHtmlFragment(
           // marked( snippet.description.trim() )
@@ -566,20 +566,20 @@ function youtubeJSONtoHVML( json ) {
     seasonNumber = getSeasonNumber( currentItem, episodeNumber );
 
     if ( seasonNumber ) {
-      seasonGroup = ovml.find( '//group[@xml:id="season-' + seasonNumber + '"]', namespaces );
+      seasonGroup = hvml.find( '//group[@xml:id="season-' + seasonNumber + '"]', namespaces );
 
       // Logger.log( seasonGroup );
 
       if ( seasonGroup && seasonGroup.length ) {
         seasonGroup[0].addChild( video );
       } else {
-        season = new libxmljs.Element( ovml, 'group' );
+        season = new libxmljs.Element( hvml, 'group' );
         season.attr({
           "xml:id": "season-" + seasonNumber,
           "type": "series"
         });
 
-        season.addChild( new libxmljs.Element( ovml, 'title', 'Season ' + parseInt( seasonNumber, 10 ) ) );
+        season.addChild( new libxmljs.Element( hvml, 'title', 'Season ' + parseInt( seasonNumber, 10 ) ) );
 
         season.addChild( video );
 
@@ -588,7 +588,7 @@ function youtubeJSONtoHVML( json ) {
     }
   }
 
-  return ovml.toString();
+  return hvml.toString();
 }
 
 // /youtube-videos

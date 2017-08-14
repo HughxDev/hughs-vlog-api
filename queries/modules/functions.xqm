@@ -1,7 +1,7 @@
 module namespace f = 'http://db.hugh.today/functions#';
 
 declare default element namespace "http://vocab.nospoon.tv/ovml#";
-declare namespace ovml = "http://vocab.nospoon.tv/ovml#";
+declare namespace hvml = "http://vocab.nospoon.tv/ovml#";
 declare namespace xlink = "http://www.w3.org/1999/xlink";
 declare namespace oembed = "http://oembed.com/";
 declare namespace html = "http://www.w3.org/1999/xhtml";

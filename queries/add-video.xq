@@ -1,7 +1,7 @@
-import module namespace f = 'http://db.hugh.today/functions#' at 'Sites/hughs-vlog-api/queries/modules/functions.xqm';
+import module namespace f = 'http://db.hugh.today/functions#' at 'queries/modules/functions.xqm';
 
 declare default element namespace "http://vocab.nospoon.tv/ovml#";
-declare namespace ovml = "http://vocab.nospoon.tv/ovml#";
+declare namespace hvml = "http://vocab.nospoon.tv/ovml#";
 declare namespace xlink = "http://www.w3.org/1999/xlink";
 declare namespace oembed = "http://oembed.com/";
 declare namespace html = "http://www.w3.org/1999/xhtml";
@@ -14,7 +14,7 @@ declare function f:addVideo(
   $season as xs:string?,
   $video as element()?
 ) {
-  let $vlog := db:open( 'hughs-vlog', 'vlog.ovml' )
+  let $vlog := db:open( 'hughs-vlog', 'vlog.hvml' )
 
   (: let episodeNumber := count(); :)
   let $episodeNumber := xs:integer(substring-after(data(($vlog//video)[last()]/@xml:id), '-')) + 1
@@ -22,7 +22,7 @@ declare function f:addVideo(
   let $group :=
     if ( exists( $season ) )
     then
-      (: xs:integer(substring-after(data((/*[local-name() = 'ovml']/element-with-id('hughs-vlog')//*[local-name()='group'][@type='series'])[last()]/@xml:id), '-')) :)
+      (: xs:integer(substring-after(data((/*[local-name() = 'hvml']/element-with-id('hughs-vlog')//*[local-name()='group'][@type='series'])[last()]/@xml:id), '-')) :)
       <group xml:id="season-{$season}" type="series"></group>
     else
       ($vlog//element-with-id('hughs-vlog')//group[@type='series'])[last()]

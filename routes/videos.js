@@ -6,7 +6,7 @@ const Logger = require( 'bug-killer' );
 
 const NS = {
   "": "http://vocab.nospoon.tv/ovml#",
-  "ovml": "http://vocab.nospoon.tv/ovml#",
+  "hvml": "http://vocab.nospoon.tv/ovml#",
   "xlink": "http://www.w3.org/1999/xlink",
   "html": "http://www.w3.org/1999/xhtml",
   "mathml": "http://www.w3.org/1998/Math/MathML",

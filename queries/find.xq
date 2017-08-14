@@ -1,29 +1,29 @@
-import module namespace f = 'http://db.hugh.today/functions#' at 'Sites/hughs-vlog-api/queries/modules/functions.xqm';
+import module namespace f = 'http://db.hugh.today/functions#' at 'queries/modules/functions.xqm';
 
 ${namespaces}
 
 declare boundary-space strip;
 
 declare function f:findVideosByTitle( $title as xs:string ) {
-  let $vlog := db:open( 'hughs-vlog', 'vlog.ovml' )
+  let $vlog := db:open( 'hughs-vlog', 'vlog.hvml' )
   
-  for $video in $vlog//ovml:video[ovml:title[text() contains text { $title } any word]]
-    return <ovml>{ f:strip-namespace( $video ) }</ovml>
+  for $video in $vlog//hvml:video[hvml:title[text() contains text { $title } any word]]
+    return <hvml>{ f:strip-namespace( $video ) }</hvml>
 };
 
 declare function f:findVideosByPublishedDate( $date as xs:string ) {
-  let $vlog := db:open( 'hughs-vlog', 'vlog.ovml' )
+  let $vlog := db:open( 'hughs-vlog', 'vlog.hvml' )
   
-  for $video in $vlog//ovml:video[ovml:published[contains(., $date)]]
-    return <ovml>{ f:strip-namespace( $video ) }</ovml>
+  for $video in $vlog//hvml:video[hvml:published[contains(., $date)]]
+    return <hvml>{ f:strip-namespace( $video ) }</hvml>
 };
 
 declare function f:findVideosByPublishedDateRange( $dateMin as xs:string, $dateMax as xs:string ) {
-  let $vlog := db:open( 'hughs-vlog', 'vlog.ovml' )
+  let $vlog := db:open( 'hughs-vlog', 'vlog.hvml' )
   
   return
-    <ovml>{
-    for $video in $vlog//ovml:video[ovml:published > $dateMin and ovml:published < $dateMax]
+    <hvml>{
+    for $video in $vlog//hvml:video[hvml:published > $dateMin and hvml:published < $dateMax]
       return f:strip-namespace( $video )
-    }</ovml>
+    }</hvml>
 };
