@@ -1,8 +1,10 @@
-var express = require( 'express' );
-var router = express.Router();
-var basex  = require( 'basex' );
-var fs = require( 'fs' );
+const express = require( 'express' );
+const router = express.Router();
+const basex  = require( 'basex' );
+const fs = require( 'fs' );
 const Logger = require( 'bug-killer' );
+const path = require( 'path' );
+const join = path.join;
 
 const NS = {
   "": "http://vocab.nospoon.tv/ovml#",
@@ -17,7 +19,7 @@ const NS = {
 function getXQueryNamespaceDeclarations() {
   var namespaces = '';
 
-  for ( ns in NS ) {
+  for ( var ns in NS ) {
     if ( ns === '' ) {
       namespaces += 'declare default element namespace "' + NS[ns] + '";' + "\n";
     } else {
@@ -28,9 +30,45 @@ function getXQueryNamespaceDeclarations() {
   return namespaces;
 }
 
+function searchVideos( query ) {
+  return new Promise( function searchVideosPromise( resolve, reject ) {
+    // var dir = __dirname.split( path.sep ).pop();
+    // console.log( __dirname );
+    var statement = fs.readFileSync( join( __dirname, '/../queries/find.xq' ) );
+    var xquery;
+    var namespaces = getXQueryNamespaceDeclarations();
+
+    statement = eval( '`' + statement + '`' );
+
+    if ( 'title' in query ) {
+      statement += `\n\nf:findVideosByTitle( '${query.title}' )`;
+    } else if ( 'published' in query ) {
+      statement += `\n\nf:findVideosByPublishedDate( '${query.published}' )`;
+    } else if ( ( 'publishedMin' in query ) && ( 'publishedMax' in query ) ) {
+      statement += `\n\nf:findVideosByPublishedDateRange( '${query.publishedMin}', '${query.publishedMax}' )`;
+    } else if ( 'recorded' in query ) {
+      statement += `\n\nf:findVideosByRecordedDate( '${query.recorded}' )`;
+    } else if ( ( 'recordedMin' in query ) && ( 'recordedMax' in query ) ) {
+      statement += `\n\nf:findVideosByRecordedDateRange( '${query.recordedMin}', '${query.recordedMax}' )`;
+    }
+
+    xquery = client.query( statement );
+
+    // Executes the query and returns all results as a single string.
+    xquery.execute( function executeCallback( error, reply ) {
+      if ( !error ) {
+        // Not sure why there are orphaned xmlns attributes in the result, but can't figure out a good way to remove them using XQuery
+        resolve( reply.result.replace( /\s?xmlns=['"]\s*['"]/g, '' ) );
+      } else {
+        reject( error );
+      }
+    } );
+  } );
+}
+
 function replaceFeed( feed, req, res ) {
   var client = new basex.Session( 'localhost', 1984, 'admin', 'admin' );
-  var statement = fs.readFileSync( 'queries/replace-feed.xq' );
+  var statement = fs.readFileSync( join( __dirname, '/queries/replace-feed.xq' ) );
   var query;
   // var namespaces = getXQueryNamespaceDeclarations();
 
@@ -63,7 +101,7 @@ basex.debug_mode = false;
 // @todo: DRYify
 
 // /videos
-router.get( '/', function ( req, res, next ) {
+router.get( '/', function getVideos( req, res, next ) {
   // var mode = 'json';
   var mode = 'xml';
   var statement = fs.readFileSync( 'queries/get-videos.xq' );
@@ -112,6 +150,7 @@ router.get( '/', function ( req, res, next ) {
     break;
 
     case 'xml':
+    /* falls throuh */
     default:
       if ( 'limit' in req.query ) {
         statement += `\n\nf:getVideos( true(), ${req.query.limit} )`;
@@ -129,41 +168,20 @@ router.get( '/', function ( req, res, next ) {
   // client.close(function () {});
 } );
 
-router.get( '/search', function ( req, res, next ) {
-  var statement = fs.readFileSync( 'queries/find.xq' );
-  var query;
-  var namespaces = getXQueryNamespaceDeclarations();
-
-  function executeCallback( error, reply ) {
-    if ( !error ) {
+router.get( '/search', function search( req, res, next ) {
+  searchVideos( req.query )
+    .then( function foundVideos( hvml ) {
       res.setHeader( 'Content-Type', 'application/xml' );
-      // res.setHeader( 'Content-Type', 'text/plain' );
-      // Not sure why there are orphaned xmlns attributes in the result, but can't figure out a good way to remove them using XQuery
-
-      res.send( reply.result.replace( /\s?xmlns=['"]\s*['"]/g, '' ) );
-    } else {
+      res.send( hvml );
+    } )
+    .catch( function couldntFindVideos( error ) {
       res.status( 400 ).send( error );
-    }
-  }
-
-  statement = eval( '`' + statement + '`' );
-
-  if ( 'title' in req.query ) {
-    statement += `\n\nf:findVideosByTitle( '${req.query.title}' )`;
-  } else if ( 'published' in req.query ) {
-    statement += `\n\nf:findVideosByPublishedDate( '${req.query.published}' )`;
-  } else if ( ( 'publishedMin' in req.query ) && ( 'publishedMax' in req.query ) ) {
-    statement += `\n\nf:findVideosByPublishedDateRange( '${req.query.publishedMin}', '${req.query.publishedMax}' )`;
-  }
-
-  query = client.query( statement );
-
-  // Executes the query and returns all results as a single string.
-  query.execute( executeCallback );
+    } )
+  ;
 } );
 
 // @todo change to post/put
-router.get( '/add', function ( req, res, next ) {
+router.get( '/add', function addVideo( req, res, next ) {
   var statement = fs.readFileSync( 'queries/add-video.xq' );
   var query;
   var namespaces = getXQueryNamespaceDeclarations();
@@ -195,7 +213,7 @@ router.get( '/add', function ( req, res, next ) {
   query.execute( executeCallback );
 } );
 
-router.put( '/replace', function ( req, res, next ) {
+router.put( '/replace', function replaceVideo( req, res, next ) {
   res.setHeader( 'Content-Type', 'application/xml' );
   // res.send( req.body );
   replaceFeed( req.body, req, res );
@@ -203,5 +221,6 @@ router.put( '/replace', function ( req, res, next ) {
 
 module.exports = {
   "router": router,
-  "replaceFeed": replaceFeed
+  "replaceFeed": replaceFeed,
+  "search": searchVideos
 };
