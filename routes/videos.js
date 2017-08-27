@@ -150,7 +150,7 @@ router.get( '/', function getVideos( req, res, next ) {
     break;
 
     case 'xml':
-    /* falls throuh */
+    /* falls through */
     default:
       if ( 'limit' in req.query ) {
         statement += `\n\nf:getVideos( true(), ${req.query.limit} )`;
