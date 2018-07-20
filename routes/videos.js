@@ -127,7 +127,7 @@ router.get( '/', function getVideos( req, res, next ) {
       res.status( 400 ).send( error );
     }
   }
-  
+
   // Trusted source makes this OK even though it’s not ideal
   statement = eval( '`' + statement + '`' );
 
