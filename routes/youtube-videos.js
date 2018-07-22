@@ -76,7 +76,7 @@ marked.setOptions({
 function authorize( callback ) {
   auth.authorize( function ( error, tokens ) {
     if ( error ) {
-      console.log( error );
+      console.log( 'YouTube authorization error: ', error );
 
       return;
     }
@@ -140,7 +140,7 @@ function getVideos( callback ) {
                 videosListOptions,
                 ( videosError, videos ) => {
                   res.setHeader( 'Content-Type', 'application/json' );
-                  
+
                   // @todo
                   // if ( videosError ) {
                   //   res.status( 400 ).send( videosError );
@@ -211,7 +211,7 @@ function tokensExist() {
 //     ;
 
 //     node.addChild( new libxmljs.Element( hvml, 'element-name', 'text' ) );
-    
+
 //     // res.setHeader( 'Content-Type', 'application/hvml+xml' );
 //     res.setHeader( 'Content-Type', 'application/xml' );
 //     res.send( hvml.toString() );
@@ -329,7 +329,7 @@ function youtubeJSONtoHVML( json ) {
 
   function getCanonicalTitle( title ) {
     var extraneousTitlingRegex = /(?:\s+[-|]\s+)?(?:(?:Hugh['’‘]s\s+(?:\[?Startup\]?\s+)?Vlog(?:\s+Episode\s+#[0-9]+(?:\s+-\s+|:\s+))?)|\s+.\s+#.+)/gi;
-    
+
     var cleanTitle = title.replace( extraneousTitlingRegex, '' ).replace( /['‘’"“”](.+)['‘’"“”]/g, '$1' );
 
     return cleanTitle;
@@ -484,7 +484,7 @@ function youtubeJSONtoHVML( json ) {
 
     if ( canonicalDescription.trim() !== '' ) {
       description = new libxmljs.Element( hvml, 'description' ).attr({ "type": "xhtml" });
-      
+
       description.addChild(
         libxmljs.parseHtmlFragment(
           // marked( snippet.description.trim() )
@@ -533,7 +533,7 @@ function youtubeJSONtoHVML( json ) {
     venueEntity.attr({
       "site": "https://www.youtube.com/"
     });
-    
+
     venue.addChild( venueEntity );
     venue.addChild( new libxmljs.Element( hvml, 'uri', YOUTUBE_WATCH_URL_PREFIX + currentItem.id ) );
     venue.addChild( new libxmljs.Element( hvml, 'title', snippet.title ) );
@@ -653,7 +653,7 @@ router.get( '/oauth2callback', function ( req, res, next ) {
 
     if ( error ) {
       res.status( 400 ).send( error );
-     
+
       return Logger.log( error );
     }
 

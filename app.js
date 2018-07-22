@@ -1,8 +1,8 @@
-var express        = require( 'express' );  
+var express        = require( 'express' );
 // var morgan         = require( 'morgan' );
-var bodyParser     = require( 'body-parser' );  
-var methodOverride = require( 'method-override' );  
-var app            = express();  
+var bodyParser     = require( 'body-parser' );
+var methodOverride = require( 'method-override' );
+var app            = express();
 var router         = express.Router();
 var http           = require( 'http' );
 // var xmlparser      = require( 'express-xml-bodyparser' );
@@ -14,7 +14,13 @@ var youtubeVideos = require( './routes/youtube-videos' );
 // var oauth2callback = require( './routes/oauth2callback' );
 var videos = require( './routes/videos.js' );
 
-router.use(function( req, res, next ) {  
+process.stdout.on( 'error', function ( err ) {
+  // if ( err.code == "EPIPE" ) {
+  process.exit(0);
+  // }
+} );
+
+router.use(function( req, res, next ) {
   res.header( 'Access-Control-Allow-Origin', '*' );
   // res.header( 'Access-Control-Allow-Headers', 'X-Auth-Key');
   res.header( 'Access-Control-Allow-Methods', 'OPTIONS,GET,PUT,POST,DELETE' );
@@ -32,7 +38,7 @@ app.use( bodyParser.text({
 
 app.set( 'port', process.env.PORT || 3000 );
 
-app.listen( app.get( 'port' ), function () {  
+app.listen( app.get( 'port' ), function () {
   console.log( 'Express up and listening on port ' + app.get('port') );
 } );
 
@@ -43,7 +49,7 @@ app.route( '/' )
 
     next();
   } )
-  .get( function ( req, res ) { 
+  .get( function ( req, res ) {
     res.send( 'hello' );
   } )
 ; // /
@@ -72,7 +78,7 @@ app.route( '/oembed' )
       oembedRes.on( 'data', function( chunk ) {
         body += chunk;
       } );
-      
+
       oembedRes.on( 'end', function() {
         res.setHeader( 'Content-Type', 'application/json' );
         res.send( body );
