@@ -14,6 +14,7 @@
     "basex": "^0.9.0",
     "body-parser": "^1.17.1",
     "bug-killer": "^4.4.2",
+    "epipebomb": "^1.0.0",
     "express": "^4.15.2",
     "googleapis": "^18.0.0",
     "http": "0.0.0",
