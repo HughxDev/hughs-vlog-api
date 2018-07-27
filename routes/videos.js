@@ -68,7 +68,7 @@ function searchVideos( query ) {
 
 function replaceFeed( feed, req, res ) {
   var client = new basex.Session( 'localhost', 1984, 'admin', 'admin' );
-  var statement = fs.readFileSync( join( __dirname, '/queries/replace-feed.xq' ) );
+  var statement = fs.readFileSync( join( __dirname, '..', '/queries/replace-feed.xq' ) );
   var query;
   // var namespaces = getXQueryNamespaceDeclarations();
 

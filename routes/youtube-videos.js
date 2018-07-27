@@ -76,7 +76,7 @@ marked.setOptions({
 function authorize( callback ) {
   auth.authorize( function ( error, tokens ) {
     if ( error ) {
-      console.log( 'YouTube authorization error: ', error );
+      Logger.log( 'YouTube authorization error: ', error );
 
       return;
     }
@@ -86,7 +86,7 @@ function authorize( callback ) {
   });
 }
 
-function getVideos( callback ) {
+function getVideos( req, res, callback ) {
   fs.readFile( YOUTUBE_VIDEOS_CACHE_PATH, 'utf8', ( error, data ) => {
     if ( !error ) {
       fs.stat( YOUTUBE_VIDEOS_CACHE_PATH, function( error, stats ) {
@@ -95,8 +95,9 @@ function getVideos( callback ) {
         var now = Date.now();
         var mtime = Date.parse( stats.mtime );
         var cacheAge = now - mtime;
+        var size = stats.size;
 
-        if ( cacheAge >= ONE_DAY ) {
+        if ( ( cacheAge >= ONE_DAY ) || !size ) {
           // refresh cache
           var playlistItems = yt.playlistItems.list(
             {
@@ -139,14 +140,18 @@ function getVideos( callback ) {
               var videos = yt.videos.list(
                 videosListOptions,
                 ( videosError, videos ) => {
-                  res.setHeader( 'Content-Type', 'application/json' );
-
                   // @todo
-                  // if ( videosError ) {
-                  //   res.status( 400 ).send( videosError );
+                  if ( videosError ) {
+                    res.status( 400 ).send( videosError );
 
-                  //   return Logger.log( videosError );
-                  // }
+                    Logger.log( videosError );
+                    return videosError;
+                  }
+
+                  // console.log( 'videos', videos );
+                  // Logger.log( videos );
+
+                  res.setHeader( 'Content-Type', 'application/json' );
 
                   // @todo: Over 50 results
                   // if ( 'nextPageToken' in videos ) {
@@ -237,7 +242,10 @@ function youtubeJSONtoHVML( json ) {
       ✔ recordingDetails ?
           .recordingDate → <recorded>
 */
-  json = JSON.parse( json );
+  // console.log( json );
+  if ( ( typeof json === 'string' ) || ( json instanceof String ) ) {
+    json = JSON.parse( json );
+  }
 
   function getRecordingDate( item ) {
     // check if metadata version exists
@@ -601,7 +609,7 @@ router.get( '/', function ( req, res, next ) {
         Logger.log( 'Using saved tokens.' );
 
         // @todo setHeader
-        getVideos(function ( data, error ) {
+        getVideos(req, res, function ( data, error ) {
           if ( !error ) {
             res.setHeader( 'Content-Type', 'application/xml' );
             res.send( data );
@@ -623,7 +631,7 @@ router.get( '/', function ( req, res, next ) {
   } else {
     authorize( function () {
       // @todo setHeader
-      getVideos(function ( data, error ) {
+      getVideos(req, res, function ( data, error ) {
         if ( !error ) {
           res.setHeader( 'Content-Type', 'application/xml' );
           res.send( data );
@@ -636,7 +644,7 @@ router.get( '/', function ( req, res, next ) {
 } );
 
 router.get( '/sync', function ( req, res, next ) {
-  getVideos( function ( data, error ) {
+  getVideos( req, res, function ( data, error ) {
     if ( !error ) {
       // res.send( data );
       replaceFeed( data, req, res );
@@ -671,7 +679,7 @@ router.get( '/oauth2callback', function ( req, res, next ) {
     // Channel ID: UCGPCcxdykgp6hgvL0XE3yaA
     // Playlist ID - Entire Series: PLP0y6Eq5YpfQ_1l9JClXpzx7cUyr453Zr
 
-    getVideos(function ( data, error ) {
+    getVideos(req, res, function ( data, error ) {
       if ( !error ) {
         res.setHeader( 'Content-Type', 'application/xml' );
         res.send( data );
