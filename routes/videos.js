@@ -168,6 +168,53 @@ router.get( '/', function getVideos( req, res, next ) {
   // client.close(function () {});
 } );
 
+// @todo: Content Negotiation?
+router.get( '/podcast', function getItunesRss( req, res, next ) {
+  // var mode = 'json';
+  var mode = 'xml';
+  var statement = fs.readFileSync( 'queries/xslt.xq' );
+  var namespaces = getXQueryNamespaceDeclarations();
+  var query;
+
+  function resultsCallback( error, reply ) {
+    if ( !error ) {
+      res.setHeader( 'Content-Type', 'application/json' );
+      res.send( reply.result );
+    } else {
+      res.status( 400 ).send( error );
+    }
+  }
+
+  function executeCallback( error, reply ) {
+    if ( !error ) {
+      // res.setHeader( 'Content-Type', 'application/rss+xml' );
+      res.setHeader( 'Content-Type', 'application/xml' );
+      // Not sure why there are orphaned xmlns attributes in the result, but can't figure out a good way to remove them using XQuery
+      res.send( reply.result );
+    } else {
+      res.status( 400 ).send( error );
+    }
+  }
+
+  statement = eval( '`' + statement + '`' );
+
+  switch ( mode ) {
+    case 'json':
+      query = client.query( statement );
+      query.results( resultsCallback );
+    break;
+
+    case 'xml':
+    /* falls through */
+    default:
+      query = client.query( statement );
+      query.execute( executeCallback );
+    break;
+  }
+
+  // client.close(function () {});
+} );
+
 router.get( '/search', function search( req, res, next ) {
   searchVideos( req.query )
     .then( function foundVideos( hvml ) {
