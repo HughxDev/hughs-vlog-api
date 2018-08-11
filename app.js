@@ -12,7 +12,7 @@ var http           = require( 'http' );
 const Logger = require( 'bug-killer' );
 
 // External Routes
-var youtubeVideos = require( './routes/youtube-videos' );
+var thirdParty = require( './routes/third-party' );
 // var oauth2callback = require( './routes/oauth2callback' );
 var videos = require( './routes/videos.js' );
 
@@ -23,9 +23,10 @@ process.stdout.on( 'error', function ( err ) {
 } );
 
 router.use(function( req, res, next ) {
-  res.header( 'Access-Control-Allow-Origin', '*' );
+  res.setHeader( 'Access-Control-Allow-Origin', '*' );
   // res.header( 'Access-Control-Allow-Headers', 'X-Auth-Key');
-  res.header( 'Access-Control-Allow-Methods', 'OPTIONS,GET,PUT,POST,DELETE' );
+  res.setHeader( 'Access-Control-Allow-Methods', 'OPTIONS,GET,PUT,POST,DELETE' );
+  res.setHeader( 'X-Content-Type-Options', 'nosniff' );
 
   next();
 });
@@ -100,8 +101,8 @@ app.route( '/upload' )
 app.route( '/search' )
 ; // search
 
-app.use( '/videos', videos.router );
+app.use( '/feed', videos.router );
 
-app.use( '/youtube-videos', youtubeVideos );
+app.use( '/third-party', thirdParty );
 
 // app.use( '/oauth2callback', oauth2callback );

@@ -13,6 +13,10 @@ const opn = require( 'opn' );
 const libxmljs = require( 'libxmljs' );
 const marked = require( 'marked' );
 
+const Vimeo = require( 'vimeo' ).Vimeo;
+const VIMEO_CREDENTIALS = readJson( `${__dirname}/../vimeo-api/credentials.json` );
+const vimeo = new Vimeo( VIMEO_CREDENTIALS.client_id, VIMEO_CREDENTIALS.client_secret, VIMEO_CREDENTIALS.access_token );
+
 const replaceFeed = require( `${__dirname}/videos.js` ).replaceFeed;
 
 const HVMLpath = `${__dirname}/../vlog.hvml`;
@@ -25,24 +29,35 @@ const GOOGLE_SIMPLE_AUTH = 0;
 const GOOGLE_OAUTH = 1;
 const GOOGLE_JWT_AUTH = 2;
 
-const AUTH_TYPE = GOOGLE_JWT_AUTH;
+const GOOGLE_AUTH_TYPE = GOOGLE_JWT_AUTH;
 
 const YOUTUBE_VIDEOS_CACHE_PATH = 'cache/youtube-videos.json';
 const YOUTUBE_WATCH_URL_PREFIX = 'https://www.youtube.com/watch?v=';
 
+const VIMEO_VIDEOS_CACHE_PATH = 'cache/vimeo-videos.json';
+const VIMEO_WATCH_URL_PREFIX = 'https://vimeo.com/';
+const VIMEO_FLOAT_29_97 = 29.969999999999998863131622783839702606201171875;
+
 const ONE_DAY = 24 * 60 * 60 * 1000;
 
-var auth;
+const namespaces = {
+  "hvml": "http://vocab.nospoon.tv/ovml#",
+  "xlink": "http://www.w3.org/1999/xlink",
+  "oembed": "http://oembed.com/",
+  "html": "http://www.w3.org/1999/xhtml"
+};
+
+var ytAuth;
 // var markedRenderer = new marked.Renderer();
 
 // markedRenderer.paragraph = function(text) {
 //   return text + '\n';
 // };
 
-switch ( AUTH_TYPE ) {
+switch ( GOOGLE_AUTH_TYPE ) {
   case GOOGLE_SIMPLE_AUTH:
     // new google.auth.???
-    auth = YouTube.authenticate( {
+    ytAuth = YouTube.authenticate( {
       type: "key",
       key: "AIzaSyB4Tbn_ojseQFuK6mcR1ZiOB1KdV3PMn7g"
     } );
@@ -50,7 +65,7 @@ switch ( AUTH_TYPE ) {
 
   case GOOGLE_OAUTH:
     // new google.auth.OAuth2(clientId, clientSecret, redirectUri, opt_opts) {}
-    auth = YouTube.authenticate( {
+    ytAuth = YouTube.authenticate( {
       type: "oauth",
       client_id: GOOGLE_WEB_CLIENT_CREDENTIALS.web.client_id,
       client_secret: GOOGLE_WEB_CLIENT_CREDENTIALS.web.client_secret,
@@ -59,7 +74,7 @@ switch ( AUTH_TYPE ) {
   break;
 
   case GOOGLE_JWT_AUTH:
-    auth = new google.auth.JWT(
+    ytAuth = new google.auth.JWT(
       GOOGLE_SERVICE_ACCOUNT_CREDENTIALS.client_email,
       null,
       GOOGLE_SERVICE_ACCOUNT_CREDENTIALS.private_key,
@@ -73,8 +88,8 @@ marked.setOptions({
   "breaks": true
 });
 
-function authorize( callback ) {
-  auth.authorize( function ( error, tokens ) {
+function ytAuthorize( callback ) {
+  ytAuth.authorize( function ( error, tokens ) {
     if ( error ) {
       Logger.log( 'YouTube authorization error: ', error );
 
@@ -86,10 +101,62 @@ function authorize( callback ) {
   });
 }
 
-function getVideos( req, res, callback ) {
+function getVimeoVideos( req, res, callback ) {
+  const vimeoProjectId = '434074';
+
+  fs.readFile( VIMEO_VIDEOS_CACHE_PATH, 'utf8', ( error, data ) => {
+    if ( !error ) {
+      fs.stat( VIMEO_VIDEOS_CACHE_PATH, function ( error, stats ) {
+        var now = Date.now();
+        var mtime = Date.parse( stats.mtime );
+        var cacheAge = now - mtime;
+        var size = stats.size;
+
+        if ( ( cacheAge >= ONE_DAY ) || !size || data.trim() === '{}' ) {
+          // refresh cache
+          vimeo.request( {
+            "method": "GET",
+            "path": `/me/projects/${vimeoProjectId}/videos`,
+            "query": {
+              "direction": "asc",
+              "sort": "date"
+            },
+            // An object containing all additional headers (for example, `{"If-Modified-Since": "Mon, 03 Mar 2014 16:29:37 -0500"}`
+            // "headers": {}
+          }, function ( vimeoError, vimeoVideos, status_code, headers ) {
+            res.setHeader( 'Content-Type', 'application/json' );
+            // @todo: Over 100(?) results
+            fs.writeFile( VIMEO_VIDEOS_CACHE_PATH, JSON.stringify( vimeoVideos ), 'utf8', function () {
+              mergeVimeoData( req, res, vimeoVideos, callback );
+            } );
+          } );
+        } else {
+          // use cache
+          mergeVimeoData( req, res, data, callback );
+        }
+      } ); // fs.stat
+    // readFile error
+    } else {
+      // The cache path doesn’t exist; attempt to write it, and then retry with same params
+      if ( error.code === 'ENOENT' ) {
+        fs.writeFile( VIMEO_VIDEOS_CACHE_PATH, '{}', 'utf8', function ( writeError ) {
+          if ( writeError ) {
+            callback( null, writeError );
+          } else {
+            getVimeoVideos( req, res, callback );
+          }
+        } );
+      } else {
+        callback( null, error );
+      }
+    }
+  } ); // fs.readFile
+}
+
+function getYoutubeVideos( req, res, callback ) {
   fs.readFile( YOUTUBE_VIDEOS_CACHE_PATH, 'utf8', ( error, data ) => {
     if ( !error ) {
-      fs.stat( YOUTUBE_VIDEOS_CACHE_PATH, function( error, stats ) {
+      fs.stat( YOUTUBE_VIDEOS_CACHE_PATH, function ( error, stats ) {
         // console.log( stats.mtime );
         // res.send( stats );
         var now = Date.now();
@@ -101,7 +168,7 @@ function getVideos( req, res, callback ) {
           // refresh cache
           var playlistItems = yt.playlistItems.list(
             {
-              "auth": auth,
+              "auth": ytAuth,
               "part": "contentDetails",
               "playlistId": "PLP0y6Eq5YpfQ_1l9JClXpzx7cUyr453Zr",
               "maxResults": 50
@@ -114,7 +181,7 @@ function getVideos( req, res, callback ) {
               }
 
               var videosListOptions = {
-                "auth": auth,
+                "auth": ytAuth,
                 "part": "contentDetails,fileDetails,id,liveStreamingDetails,localizations,player,processingDetails,recordingDetails,snippet,statistics,status,topicDetails",
                 "id": videoIds.join( ',' )
                 // "maxResults": 50
@@ -133,7 +200,7 @@ function getVideos( req, res, callback ) {
               // "processingDetails": {
               //   "processingStatus": "terminated"
               // },
-              if ( AUTH_TYPE !== GOOGLE_OAUTH ) {
+              if ( GOOGLE_AUTH_TYPE !== GOOGLE_OAUTH ) {
                 videosListOptions.part = videosListOptions.part.replace( /(?:fileDetails|processingDetails|suggestions),?/g, '' );
               }
 
@@ -228,20 +295,227 @@ function tokensExist() {
 //   updateXML( res );
 // } );
 
+function vimeoJSONtoHVML( vimeoData, hvmlData ) {
+  function hasVimeoPermalink( datum ) {
+    return ( datum.link && datum.link.match( /https?:\/\/vimeo.com\/hughguiney\/([0-9]{4,}-[0-9]{2}-[0-9]{2})/ ) );
+  }
+
+  hvml = libxmljs.parseXmlString( hvmlData );
+
+  if ( ( typeof vimeoData === 'string' ) || ( vimeoData instanceof String ) ) {
+    vimeoData = JSON.parse( vimeoData );
+  }
+
+  const thumbnailUrlRegex = /\.(jpe?g|png|gif|webp)(\?[^=]+=[^=]+(&[^=]+=[^=]+)*)?$/i;
+
+  for ( let i = 0; i < vimeoData.data.length; ++i ) {
+    let vimeoDatum = vimeoData.data[i];
+    let hasPermalink = hasVimeoPermalink( vimeoDatum );
+
+    if ( hasPermalink ) {
+      let vimeoLink = hasPermalink[0];
+      let recordedDate = hasPermalink[1];
+      // 2018-08-06T21:44:46+00:00
+      let datetime = vimeoDatum.created_time.split( 'T' );
+      let video = hvml.get(
+        `//hvml:group[@type="series"]/hvml:video[./hvml:recorded[./text() = '${recordedDate}']]`,
+        { "hvml": namespaces.hvml }
+      );
+      // Bizarre syntax… looks like "xmlns" gets replaced with the namespace URI
+      let showing = video.find( 'xmlns:showing', namespaces.hvml )[0];
+
+      // `<showing scope="release" type="internet" admission="private" datetime="${datetime[0]}">
+      //   <venue type="site" datetime="${datetime[1]}">
+      //     <entity site="https://vimeo.com/">Vimeo</entity>
+      //     <uri>${vimeoLink}</uri>
+      //     <uri>${VIMEO_WATCH_URL_PREFIX + vimeoDatum.pictures.uri.replace( /\/videos\/([0-9]+):([^\/]+)\/pictures\/[0-9]+/, '$1/$2' ) }</uri>
+      //     <title>${vimeoDatum.name}</title>
+      //   </venue>
+      // </showing>`;
+      let newShowing = new libxmljs.Element( hvml, 'showing' ).attr( {
+        "scope": "release",
+        "type": "internet",
+        "admission": "private",
+        "datetime": datetime[0]
+      } );
+
+      let venue = new libxmljs.Element( hvml, 'venue' ).attr( {
+        "type": "site",
+        "datetime": datetime[1]
+      } );
+
+      let entity = new libxmljs.Element( hvml, 'entity', 'Vimeo' ).attr( {
+        "site": VIMEO_WATCH_URL_PREFIX
+      } );
+
+      let primaryUri = new libxmljs.Element( hvml, 'uri', vimeoLink );
+
+      let secondaryUri = new libxmljs.Element( hvml, 'uri',
+        VIMEO_WATCH_URL_PREFIX
+        + vimeoDatum.pictures.uri
+          .replace( /\/videos\/([0-9]+):([^\/]+)\/pictures\/[0-9]+/, '$1/$2' )
+      );
+
+      let title = new libxmljs.Element( hvml, 'title', vimeoDatum.name );
+
+      newShowing.addChild(
+        venue
+          .addChild( entity )
+          .addChild( primaryUri )
+          .addChild( secondaryUri )
+          .addChild( title )
+      );
+
+      showing.addNextSibling( newShowing );
+
+      // console.log( showing.parent().toString() );
+
+      // <presentation>
+      //   <poster xml:id="ep-4-poster-webp-720p-vimeo" width="1280" height="720" xlink:href="https://i.vimeocdn.com/video/717920060.webp" />
+      //   <frametype abbr="p">progressive</frametype>
+      //   <par x="1" y="1" />
+      //   <fps rate="30000" scale="1001" />
+      //   <file xml:id="ep-4-mp4-720p-vimeo" label="ep-4" xlink:href="https://player.vimeo.com/external/283609122.hd.mp4?s=8ac446cc5958250d6aadc418d56831007653b013&amp;profile_id=174" length="120625532">
+      //     <width>1280</width>
+      //     <height>720</height>
+      //     <container>
+      //       <mime>video/mp4</mime>
+      //     </container>
+      //   </file>
+      // </presentation>
+
+      let presentation = new libxmljs.Element( hvml, 'presentation' );
+
+      let episodeNumber = video.find( 'xmlns:episode', namespaces.hvml )[0].text();
+      let thumbnailSizes = vimeoDatum.pictures.sizes;
+      let fullSizeThumbnail = thumbnailSizes[thumbnailSizes.length - 1];
+      let fullSizeThumbnailFormat = fullSizeThumbnail.link.match( thumbnailUrlRegex );
+      let fullSizeThumbnailFormatMime = `image/${fullSizeThumbnailFormat[1]}`.replace( /\/jpg$/, '/jpeg' );
+
+      let posterAttributes = {
+        "xml:id": `ep-${episodeNumber}-poster-${fullSizeThumbnailFormat[1]}-${fullSizeThumbnail.height}p-vimeo`,
+        "width": fullSizeThumbnail.width,
+        "height": fullSizeThumbnail.height,
+        "xlink:href": fullSizeThumbnail.link,
+        "mime": fullSizeThumbnailFormatMime
+      };
+
+      let pngPosterAttributes = Object.assign( {}, posterAttributes, {
+        "xml:id": posterAttributes['xml:id'].replace( /-jpe?g-/, '-png-' ),
+        "xlink:href": posterAttributes['xlink:href'].replace( thumbnailUrlRegex, '.png$2' ),
+        "mime": posterAttributes['mime'].replace( /\/jpeg$/, '/png' )
+      } );
+
+      let webpPosterAttributes = Object.assign( {}, posterAttributes, {
+        "xml:id": posterAttributes['xml:id'].replace( /-jpe?g-/, '-webp-' ),
+        "xlink:href": posterAttributes['xlink:href'].replace( thumbnailUrlRegex, '.webp$2' ),
+        "mime": posterAttributes['mime'].replace( /\/jpeg$/, '/webp' )
+      } );
+
+      let jpegPoster = new libxmljs.Element( hvml, 'poster' ).attr( posterAttributes );
+      let pngPoster = new libxmljs.Element( hvml, 'poster' ).attr( pngPosterAttributes );
+      let webpPoster = new libxmljs.Element( hvml, 'poster' ).attr( webpPosterAttributes );
+
+      presentation
+        .addChild( jpegPoster )
+        .addChild( webpPoster )
+        .addChild( pngPoster )
+      ;
+
+      // Vimeo doesn’t provide the following information so we’re making
+      // some assumptions, but they should be safe to make for HD+ in 2018+
+      if ( vimeoDatum.height >= 720 ) {
+        let frametype = new libxmljs.Element( hvml, 'frametype', 'progressive' ).attr( { "abbr": "p" } );
+        let par = new libxmljs.Element( hvml, 'par' ).attr( { "x": "1", "y": "1" } );
+
+        presentation
+          .addChild( frametype )
+          .addChild( par )
+        ;
+      }
+
+      let fpsAttributes = {};
+
+      switch ( vimeoDatum.files[0].fps ) {
+        case VIMEO_FLOAT_29_97:
+          fpsAttributes.rate = "30000";
+          fpsAttributes.scale = "1001";
+        break;
+
+        default:
+          fpsAttributes.rate = ( vimeoDatum.files[0].fps * 1000 ).toString();
+          fpsAttributes.scale = "1000";
+      }
+
+      let fps = new libxmljs.Element( hvml, 'fps' ).attr( fpsAttributes );
+
+      presentation
+        .addChild( fps )
+      ;
+
+      //   <file xml:id="ep-4-mp4-720p-vimeo" label="ep-4" xlink:href="https://player.vimeo.com/external/283609122.hd.mp4?s=8ac446cc5958250d6aadc418d56831007653b013&amp;profile_id=174" length="120625532">
+      //     <width>1280</width>
+      //     <height>720</height>
+      //     <container>
+      //       <mime>video/mp4</mime>
+      //     </container>
+      //   </file>
+
+      for ( let i = 0; i < vimeoDatum.files.length; ++i ) {
+        let fileData = vimeoDatum.files[i];
+        let shorthandMime = fileData.type.replace( 'video/', '' );
+
+        let file = new libxmljs.Element( hvml, 'file' ).attr( {
+          "xml:id": `ep-${episodeNumber}-${shorthandMime}-${fileData.height ? ( fileData.height + 'p' ) : fileData.quality}-vimeo`,
+          "label": `ep-${episodeNumber}`,
+          "xlink:href": fileData.link,
+          "length": fileData.size
+        } );
+
+        if ( fileData.width ) {
+          let width = new libxmljs.Element( hvml, 'width', fileData.width.toString() );
+          file.addChild( width );
+        }
+
+        if ( fileData.height ) {
+          let height = new libxmljs.Element( hvml, 'height', fileData.height.toString() );
+          file.addChild( height );
+        }
+
+        let container = new libxmljs.Element( hvml, 'container' );
+        let mime = new libxmljs.Element( hvml, 'mime', fileData.type );
+
+        presentation.addChild(
+          file
+            .addChild(
+              container.addChild( mime )
+            )
+        );
+      }
+
+      newShowing.addNextSibling( presentation );
+
+      // console.log( newShowing.parent().toString() );
+    }
+  } // for vimeoData
+
+  return hvml.toString();
+}
+
 function youtubeJSONtoHVML( json ) {
-/*
-  for each item:
-    <video type="personal" xml:lang="XX" xml:id="ep-XXX">
-      ✔︎ snippet.defaultAudioLanguage → @xml:lang
-      ✔ snippet.title → <title>
-      ✔ snippet.description → <description type="xhtml"><div xmlns>
-        snippet.tags → <tags><tag>
-      ✔ contentDetails.duration → <runtime>
-      ✔ id → <showing scope="release" type="internet" admission="public">
-               <uri>https://www.youtube.com/watch?v=XXXX</uri>
-      ✔ recordingDetails ?
-          .recordingDate → <recorded>
-*/
+  /*
+    for each item:
+      <video type="personal" xml:lang="XX" xml:id="ep-XXX">
+        ✔︎ snippet.defaultAudioLanguage → @xml:lang
+        ✔ snippet.title → <title>
+        ✔ snippet.description → <description type="xhtml"><div xmlns>
+          snippet.tags → <tags><tag>
+        ✔ contentDetails.duration → <runtime>
+        ✔ id → <showing scope="release" type="internet" admission="public">
+                 <uri>https://www.youtube.com/watch?v=XXXX</uri>
+        ✔ recordingDetails ?
+            .recordingDate → <recorded>
+  */
   // console.log( json );
   if ( ( typeof json === 'string' ) || ( json instanceof String ) ) {
     json = JSON.parse( json );
@@ -380,30 +654,44 @@ function youtubeJSONtoHVML( json ) {
     // );
   }
 
-  var defaultLanguage = 'en';
+  var defaultLanguage = 'en-US';
 
   var hvml = libxmljs.parseXml(
     `<?xml version="1.0" encoding="UTF-8"?>
     <hvml
       xmlns="http://vocab.nospoon.tv/ovml#"
-      xmlns:hvml="http://vocab.nospoon.tv/ovml#"
       xmlns:xlink="http://www.w3.org/1999/xlink"
       xmlns:oembed="http://oembed.com/"
       xmlns:html="http://www.w3.org/1999/xhtml"
       xml:lang="${defaultLanguage}"
     >
       <group xml:id="hughs-vlog" type="series">
+        <title>Hugh’s Vlog</title>
+        <description type="xhtml">
+          <div xmlns="http://www.w3.org/1999/xhtml">
+            <p>Hi, I’m Hugh. I started this video blog to document what it’s like to build a company, day by day, from the very beginning. I want to take this typically very private process and open it up to everyone. Imagine if you were able to watch Steve Jobs and Wozniak grow Apple from a garage project into the largest tech company in the world? I may not reach that level of success; I may fail spectacularly, but at least there will be a record of the attempt.</p>
+            <p>For me, it’s self-improvement by way of radical transparency, and the public accountability that comes with that. For you: you get to my virtual co-founders. I’ll be listening to your feedback in the comments and chat room every step of the way. I also endeavor to make the series equal parts informative and entertaining—so whether you’re a fellow founder looking to compare notes, or just an Average Joe/Josephine killing time on your lunch break, there’s something in it for you.</p>
+            <p>Join me as I attempt to achieve financial independence, put a dent in the universe, and squeeze the most I can out of life along the way.</p>
+          </div>
+        </description>
+        <tagline>The daily life of a startup founder, programmer, and filmmaker.</tagline>
+        <producer>
+          <entity>
+            <name>
+              <family-name>Guiney</family-name>
+              <given-name>Hugh</given-name>
+            </name>
+            <uri>https://hugh.today</uri>
+            <email>hello@hugh.today</email>
+          </entity>
+        </producer>
+        <copyright>
+          <text>© 2016–2018 Hugh Guiney</text>
+        </copyright>
         <!-- <group xml:id="season-x" type="series"></group> -->
       </group>
     </hvml>`
   );
-
-  var namespaces = {
-    "hvml": "http://vocab.nospoon.tv/ovml#",
-    "xlink": "http://www.w3.org/1999/xlink",
-    "oembed": "http://oembed.com/",
-    "html": "http://www.w3.org/1999/xhtml"
-  };
 
   // var seasonX = hvml.find( '//hvml:group[@xml:id="season-x"]', namespaces )[0];
   var hughsVlog = hvml.find( '//hvml:group[@xml:id="hughs-vlog"]', namespaces )[0];
@@ -597,11 +885,11 @@ function youtubeJSONtoHVML( json ) {
   }
 
   return hvml.toString();
-}
+} // youtubeJSONtoHVML
 
-// /youtube-videos
-router.get( '/', function ( req, res, next ) {
-  if ( AUTH_TYPE === GOOGLE_OAUTH ) {
+// /third-party
+router.get( '/youtube', function ( req, res, next ) {
+  if ( GOOGLE_AUTH_TYPE === GOOGLE_OAUTH ) {
     if ( tokensExist() ) {
       if ( ( new Date() ) < ( new Date( TOKENS.expiry_date ) ) ) {
         oauth.setCredentials( TOKENS );
@@ -609,7 +897,7 @@ router.get( '/', function ( req, res, next ) {
         Logger.log( 'Using saved tokens.' );
 
         // @todo setHeader
-        getVideos(req, res, function ( data, error ) {
+        getYoutubeVideos(req, res, function ( data, error ) {
           if ( !error ) {
             res.setHeader( 'Content-Type', 'application/xml' );
             res.send( data );
@@ -629,9 +917,9 @@ router.get( '/', function ( req, res, next ) {
       getTokens();
     }
   } else {
-    authorize( function () {
+    ytAuthorize( function () {
       // @todo setHeader
-      getVideos(req, res, function ( data, error ) {
+      getYoutubeVideos(req, res, function ( data, error ) {
         if ( !error ) {
           res.setHeader( 'Content-Type', 'application/xml' );
           res.send( data );
@@ -643,8 +931,9 @@ router.get( '/', function ( req, res, next ) {
   }
 } );
 
-router.get( '/sync', function ( req, res, next ) {
-  getVideos( req, res, function ( data, error ) {
+// ⚠️ Destructive
+router.put( '/youtube/sync', function ( req, res, next ) {
+  getYoutubeVideos( req, res, function ( data, error ) {
     if ( !error ) {
       // res.send( data );
       replaceFeed( data, req, res );
@@ -654,7 +943,35 @@ router.get( '/sync', function ( req, res, next ) {
   } );
 } );
 
-// /youtube-videos/oauth2callback
+function mergeVimeoData( req, res, vimeoData, callback ) {
+  // console.log( 'vimeoData', vimeoData );
+  getYoutubeVideos( req, res, function ( hvmlData, error ) {
+    if ( !error ) {
+      callback( vimeoJSONtoHVML( vimeoData, hvmlData ) );
+    } // if !error
+    else {
+      callback( null, error );
+    }
+  } ); // getYoutubeVideos
+}
+
+router.get( '/vimeo', function ( req, res, next ) {
+  getVimeoVideos( req, res, function ( data, error ) {
+    if ( error ) {
+      res.status( 500 ).send( error );
+      return error;
+    }
+
+    res.setHeader( 'Content-Type', 'application/json' );
+    res.send( data );
+  } );
+} );
+
+// router.put( '/vimeo/sync', function ( req, res, next ) {} );
+
+// router.put( '/sync', function ( req, res, next ) {} );
+
+// /third-party/oauth2callback
 router.get( '/oauth2callback', function ( req, res, next ) {
   oauth.getToken( req.query.code, ( error, tokens ) => {
     Logger.log( 'Trying to get the token using the following code: ' + req.query.code );
@@ -679,7 +996,7 @@ router.get( '/oauth2callback', function ( req, res, next ) {
     // Channel ID: UCGPCcxdykgp6hgvL0XE3yaA
     // Playlist ID - Entire Series: PLP0y6Eq5YpfQ_1l9JClXpzx7cUyr453Zr
 
-    getVideos(req, res, function ( data, error ) {
+    getYoutubeVideos(req, res, function ( data, error ) {
       if ( !error ) {
         res.setHeader( 'Content-Type', 'application/xml' );
         res.send( data );
