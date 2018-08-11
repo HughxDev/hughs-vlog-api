@@ -1,3 +1,5 @@
+xquery version "3.0";
+
 module namespace f = 'http://db.hugh.today/functions#';
 
 declare default element namespace "http://vocab.nospoon.tv/ovml#";
@@ -17,4 +19,16 @@ declare function f:strip-namespace( $e as element() ) as element() {
       then f:strip-namespace( $child )
       else $child
   }
+};
+
+(: https://gist.github.com/holmesw/6936534#file-rfc-822-date-time_002-xqy :)
+declare function f:rfc-822-date-time ( $date-time as xs:dateTime ) as xs:string? {
+  fn:replace(
+    fn:format-dateTime(
+      $date-time,
+      "[FNn,1-3], [D01] [MNn,1-3] [Y0001] [H01]:[m01]:[s01] [Z01]"
+    ),
+    "(.{29})(.{1})(.{2})",
+    "$1$3"
+  )
 };

@@ -101,7 +101,101 @@ basex.debug_mode = false;
 // @todo: DRYify
 
 // /videos
-router.get( '/', function getVideos( req, res, next ) {
+
+router.get( '/hvml', function getHVML( req, res, next ) {
+  // var mode = 'json';
+  var mode = 'xml';
+  var statement = fs.readFileSync( 'queries/get-hvml.xq' );
+  var namespaces = getXQueryNamespaceDeclarations();
+  var query;
+
+  function resultsCallback( error, reply ) {
+    if ( !error ) {
+      res.setHeader( 'Content-Type', 'application/ld+json' );
+      // Not sure why there are orphaned xmlns attributes in the result, but can't figure out a good way to remove them using XQuery
+      res.send( reply.result );
+    } else {
+      res.status( 400 ).send( error );
+    }
+  }
+
+  function executeCallback( error, reply ) {
+    if ( !error ) {
+      res.setHeader( 'Content-Type', 'application/xml' );
+      // Not sure why there are orphaned xmlns attributes in the result, but can't figure out a good way to remove them using XQuery
+      res.send( reply.result.replace( /\s?xmlns=['"]\s*['"]/g, '' ) );
+    } else {
+      res.status( 400 ).send( error );
+    }
+  }
+
+  // Trusted source makes this OK even though it’s not ideal
+  statement = eval( '`' + statement + '`' );
+
+  switch ( mode ) {
+    case 'json':
+      statement += `\n\nf:getHVML()`;
+      query = client.query( statement );
+      query.results( resultsCallback );
+    break;
+
+    case 'xml':
+    /* falls through */
+    default:
+      statement += "\n\nf:getHVML()";
+      query = client.query( statement );
+      query.execute( executeCallback );
+    break;
+  }
+} );
+
+router.get( '/hvml/series/details', function getSeriesDetails( req, res, next ) {
+  var mode = 'xml';
+  var statement = fs.readFileSync( 'queries/get-series-details.xq' );
+  var namespaces = getXQueryNamespaceDeclarations();
+  var query;
+
+  function resultsCallback( error, reply ) {
+    if ( !error ) {
+      res.setHeader( 'Content-Type', 'application/ld+json' );
+      // Not sure why there are orphaned xmlns attributes in the result, but can't figure out a good way to remove them using XQuery
+      res.send( reply.result );
+    } else {
+      res.status( 400 ).send( error );
+    }
+  }
+
+  function executeCallback( error, reply ) {
+    if ( !error ) {
+      res.setHeader( 'Content-Type', 'application/xml' );
+      // Not sure why there are orphaned xmlns attributes in the result, but can't figure out a good way to remove them using XQuery
+      res.send( reply.result ); //.replace( /\s?xmlns=['"]\s*['"]/g, '' ) );
+    } else {
+      res.status( 400 ).send( error );
+    }
+  }
+
+  // Trusted source makes this OK even though it’s not ideal
+  statement = eval( '`' + statement + '`' );
+
+  switch ( mode ) {
+    case 'json':
+      statement += `\n\nf:getSeriesDetails()`;
+      query = client.query( statement );
+      query.results( resultsCallback );
+    break;
+
+    case 'xml':
+    /* falls through */
+    default:
+      statement += "\n\nf:getSeriesDetails()";
+      query = client.query( statement );
+      query.execute( executeCallback );
+    break;
+  }
+} );
+
+router.get( '/hvml/videos', function getVideos( req, res, next ) {
   // var mode = 'json';
   var mode = 'xml';
   var statement = fs.readFileSync( 'queries/get-videos.xq' );
@@ -190,7 +284,7 @@ router.get( '/podcast', function getItunesRss( req, res, next ) {
       // res.setHeader( 'Content-Type', 'application/rss+xml' );
       res.setHeader( 'Content-Type', 'application/xml' );
       // Not sure why there are orphaned xmlns attributes in the result, but can't figure out a good way to remove them using XQuery
-      res.send( reply.result );
+      res.send( reply.result.replace( /&gt;/gi, '>' ).replace( /&lt;/gi, '<' ).replace( /&amp;amp;/gi, '&amp;' ) );
     } else {
       res.status( 400 ).send( error );
     }
