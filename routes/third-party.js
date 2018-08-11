@@ -24,6 +24,7 @@ const tokensPath = `${__dirname}/../tokens.json`;
 
 const GOOGLE_WEB_CLIENT_CREDENTIALS = readJson( `${__dirname}/../google-apis/web-client.json` );
 const GOOGLE_SERVICE_ACCOUNT_CREDENTIALS = readJson( `${__dirname}/../google-apis/service-account.json` );
+const GOOGLE_API_KEY = readJson( `${__dirname}/../google-apis/api-key.json` ).key;
 
 const GOOGLE_SIMPLE_AUTH = 0;
 const GOOGLE_OAUTH = 1;
@@ -59,7 +60,7 @@ switch ( GOOGLE_AUTH_TYPE ) {
     // new google.auth.???
     ytAuth = YouTube.authenticate( {
       type: "key",
-      key: "AIzaSyB4Tbn_ojseQFuK6mcR1ZiOB1KdV3PMn7g"
+      key: GOOGLE_API_KEY
     } );
   break;
 
