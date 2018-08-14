@@ -42,3 +42,5 @@ temp/*
 google-apis/*
 vimeo-api/*
 sftp-config.json
+.basex
+BaseXData/*
