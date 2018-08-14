@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<hvml
+  xmlns="http://vocab.nospoon.tv/ovml#"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xml:lang="en-US"
+>
+  <video type="personal" xml:id="ep-0" xml:lang="en">
+    <title>Introduction</title>
+    <episode>0</episode>
+    <runtime>PT9M51S</runtime>
+    <recorded>2016-05-18</recorded>
+    <published>2016-05-18T16:15:38.000Z</published>
+    <description type="xhtml">
+      <div xmlns="http://www.w3.org/1999/xhtml">
+        <p>Embarking on a daily vlog series to chronicle the makings of my startup. Here’s the first installment! #HughsStartupVlog</p>
+      </div>
+    </description>
+    <showing scope="release" type="internet" admission="public" datetime="2016-05-18">
+      <venue type="site" datetime="16:15:38.000Z">
+        <entity site="https://www.youtube.com/">YouTube</entity>
+        <uri>https://www.youtube.com/watch?v=o5MaYhQZONY</uri>
+        <title>Hugh's Startup Vlog Episode #0 - Introduction</title>
+        <description type="xhtml">
+          <div xmlns="http://www.w3.org/1999/xhtml">
+            <p>Embarking on a daily vlog series to chronicle the makings of my startup. Here’s the first installment! #HughsStartupVlog</p>
+          </div>
+        </description>
+      </venue>
+    </showing>
+    <showing scope="release" type="internet" admission="private" datetime="2018-08-06">
+      <venue type="site" datetime="17:44:46">
+        <entity site="https://vimeo.com/">Vimeo</entity>
+        <uri>https://vimeo.com/hughguiney/2016-05-18</uri>
+        <uri>https://vimeo.com/283559036/3f9f45d174</uri>
+        <title>Hugh"s Startup Vlog Episode #0 - Introduction</title>
+      </venue>
+    </showing>
+    <presentation>
+      <poster xml:id="ep-0-poster-webp-720p-vimeo" width="1280" height="720" xlink:href="https://i.vimeocdn.com/video/717859251.webp"/>
+      <frametype abbr="p">progressive</frametype>
+      <par x="1" y="1"/>
+      <fps rate="30000" scale="1001"/>
+      <file xml:id="ep-0-mp4-720p-vimeo" label="ep-0" xlink:href="https://player.vimeo.com/external/283559036.hd.mp4?s=2373803c17ac8e85e6278be495f48ba522f57f9a&amp;profile_id=174" length="193596055">
+        <width>1280</width>
+        <height>720</height>
+        <container>
+          <name>MPEG-4 Part 14</name>
+          <nickname>MP4</nickname>
+          <mime>video/mp4</mime>
+        </container>
+        <codec type="video">
+          <name>H.264/MPEG-4 Part 10 AVC</name>
+          <nickname>H.264</nickname>
+        </codec>
+        <codec type="audio">
+          <name>AAC-LC</name>
+          <mime>aac</mime>
+        </codec>
+      </file>
+    </presentation>
+  </video>
+</hvml>
