@@ -95,7 +95,7 @@
   </xsl:variable>
 
   <!-- Functions -->
-  <xsl:function name="functx:max-node" as="node()*">
+  <xsl:function name="functx:max-node" as="node()*" xmlns:functx="http://www.functx.com">
     <xsl:param name="nodes" as="node()*" />
     <xsl:sequence select="$nodes[. = max($nodes)]" />
   </xsl:function>
