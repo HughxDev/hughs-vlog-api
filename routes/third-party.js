@@ -384,8 +384,14 @@ function vimeoJSONtoHVML( vimeoData, hvmlData ) {
       //     </container>
       //   </file>
       // </presentation>
+      let presentation = video.get(
+        'hvml:presentation',
+        { "hvml": namespaces.hvml }
+      );
 
-      let presentation = new libxmljs.Element( hvml, 'presentation' );
+      if ( !presentation ) {
+        presentation = new libxmljs.Element( hvml, 'presentation' );
+      }
 
       let episodeNumber = video.find( 'xmlns:episode', namespaces.hvml )[0].text();
       let thumbnailSizes = vimeoDatum.pictures.sizes;
@@ -511,6 +517,7 @@ function youtubeJSONtoHVML( json ) {
         ✔ snippet.title → <title>
         ✔ snippet.description → <description type="xhtml"><div xmlns>
           snippet.tags → <tags><tag>
+          snippet.thumbnails → <presentation><poster /></presentation>
         ✔ contentDetails.duration → <runtime>
         ✔ id → <showing scope="release" type="internet" admission="public">
                  <uri>https://www.youtube.com/watch?v=XXXX</uri>
@@ -705,6 +712,9 @@ function youtubeJSONtoHVML( json ) {
     episodeNumber,
     description,
     descriptionDiv,
+    poster,
+    posterMaxres,
+    presentation,
     published,
     publishedParts,
     publishedDay,
@@ -858,6 +868,51 @@ function youtubeJSONtoHVML( json ) {
 
     video.addChild( showing );
 
+    // <presentation>
+    if ( 'thumbnails' in currentItem.snippet ) {
+      presentation = new libxmljs.Element( hvml, 'presentation' );
+
+      /*
+        <poster
+          xml:id="ep-0-poster-webp-720p-vimeo"
+          width="1280"
+          height="720"
+          xlink:href="https://i.vimeocdn.com/video/717859251.webp"
+          mime="image/webp"
+        />
+      */
+      /*
+        "maxres": {
+          "url": "https://i.ytimg.com/vi/o5MaYhQZONY/maxresdefault.jpg",
+          "width": 1280,
+          "height": 720
+        }
+      */
+      // posterMaxres = currentItem.snippet.thumbnails.maxres;
+      // @todo: all thumbnails
+      let sortedThumbnails = Object.keys( currentItem.snippet.thumbnails ).sort( function ( a, b ) {
+        return ( currentItem.snippet.thumbnails[b].height - currentItem.snippet.thumbnails[a].height );
+      } );
+
+      sortedThumbnails.forEach( function ( size ) {
+        poster = new libxmljs.Element( hvml, 'poster' );
+        thumbnail = currentItem.snippet.thumbnails[size];
+
+        // thumbnail.url;
+        poster.attr( {
+          "xml:id": `ep-${episodeNumber}-poster-jpg-${thumbnail.height}p-youtube`,
+          "width": thumbnail.width,
+          "height": thumbnail.height,
+          "xlink:href": thumbnail.url,
+          "mime": "image/jpeg"
+        } );
+
+        presentation.addChild( poster );
+      } );
+
+      video.addChild( presentation );
+    } // thumbnails
+
     // Call last
     // seasonX.addChild( video );
     seasonNumber = getSeasonNumber( currentItem, episodeNumber );
@@ -968,7 +1023,16 @@ router.get( '/vimeo', function ( req, res, next ) {
   } );
 } );
 
-// router.put( '/vimeo/sync', function ( req, res, next ) {} );
+router.put( '/vimeo/sync', function ( req, res, next ) {
+  getVimeoVideos( req, res, function ( data, error ) {
+    if ( !error ) {
+      // res.send( data );
+      replaceFeed( data, req, res );
+    } else {
+      res.status( 500 ).send( error );
+    }
+  } );
+} );
 
 // router.put( '/sync', function ( req, res, next ) {} );
 
