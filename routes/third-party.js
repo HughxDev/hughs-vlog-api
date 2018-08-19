@@ -394,40 +394,45 @@ function vimeoJSONtoHVML( vimeoData, hvmlData ) {
       }
 
       let episodeNumber = video.find( 'xmlns:episode', namespaces.hvml )[0].text();
-      let thumbnailSizes = vimeoDatum.pictures.sizes;
-      let fullSizeThumbnail = thumbnailSizes[thumbnailSizes.length - 1];
-      let fullSizeThumbnailFormat = fullSizeThumbnail.link.match( thumbnailUrlRegex );
-      let fullSizeThumbnailFormatMime = `image/${fullSizeThumbnailFormat[1]}`.replace( /\/jpg$/, '/jpeg' );
-
-      let posterAttributes = {
-        "xml:id": `ep-${episodeNumber}-poster-${fullSizeThumbnailFormat[1]}-${fullSizeThumbnail.height}p-vimeo`,
-        "width": fullSizeThumbnail.width,
-        "height": fullSizeThumbnail.height,
-        "xlink:href": fullSizeThumbnail.link,
-        "mime": fullSizeThumbnailFormatMime
-      };
-
-      let pngPosterAttributes = Object.assign( {}, posterAttributes, {
-        "xml:id": posterAttributes['xml:id'].replace( /-jpe?g-/, '-png-' ),
-        "xlink:href": posterAttributes['xlink:href'].replace( thumbnailUrlRegex, '.png$2' ),
-        "mime": posterAttributes['mime'].replace( /\/jpeg$/, '/png' )
+      let thumbnails = vimeoDatum.pictures.sizes.sort( function sortVimeoThumbnailsDescending( a, b ) {
+        return b.height - a.height;
       } );
 
-      let webpPosterAttributes = Object.assign( {}, posterAttributes, {
-        "xml:id": posterAttributes['xml:id'].replace( /-jpe?g-/, '-webp-' ),
-        "xlink:href": posterAttributes['xlink:href'].replace( thumbnailUrlRegex, '.webp$2' ),
-        "mime": posterAttributes['mime'].replace( /\/jpeg$/, '/webp' )
-      } );
+      for ( let i = 0; i < thumbnails.length; i++ ) {
+        let thumbnail = thumbnails[i];
+        let thumbnailFormat = thumbnail.link.match( thumbnailUrlRegex );
+        let thumbnailFormatMime = `image/${thumbnailFormat[1]}`.replace( /\/jpg$/, '/jpeg' );
 
-      let jpegPoster = new libxmljs.Element( hvml, 'poster' ).attr( posterAttributes );
-      let pngPoster = new libxmljs.Element( hvml, 'poster' ).attr( pngPosterAttributes );
-      let webpPoster = new libxmljs.Element( hvml, 'poster' ).attr( webpPosterAttributes );
+        let posterAttributes = {
+          "xml:id": `ep-${episodeNumber}-poster-${thumbnailFormat[1]}-${thumbnail.height}p-vimeo`,
+          "width": thumbnail.width,
+          "height": thumbnail.height,
+          "xlink:href": thumbnail.link,
+          "mime": thumbnailFormatMime
+        };
 
-      presentation
-        .addChild( jpegPoster )
-        .addChild( webpPoster )
-        .addChild( pngPoster )
-      ;
+        let pngPosterAttributes = Object.assign( {}, posterAttributes, {
+          "xml:id": posterAttributes['xml:id'].replace( /-jpe?g-/, '-png-' ),
+          "xlink:href": posterAttributes['xlink:href'].replace( thumbnailUrlRegex, '.png$2' ),
+          "mime": posterAttributes['mime'].replace( /\/jpeg$/, '/png' )
+        } );
+
+        let webpPosterAttributes = Object.assign( {}, posterAttributes, {
+          "xml:id": posterAttributes['xml:id'].replace( /-jpe?g-/, '-webp-' ),
+          "xlink:href": posterAttributes['xlink:href'].replace( thumbnailUrlRegex, '.webp$2' ),
+          "mime": posterAttributes['mime'].replace( /\/jpeg$/, '/webp' )
+        } );
+
+        let jpegPoster = new libxmljs.Element( hvml, 'poster' ).attr( posterAttributes );
+        let pngPoster = new libxmljs.Element( hvml, 'poster' ).attr( pngPosterAttributes );
+        let webpPoster = new libxmljs.Element( hvml, 'poster' ).attr( webpPosterAttributes );
+
+        presentation
+          .addChild( jpegPoster )
+          .addChild( webpPoster )
+          .addChild( pngPoster )
+        ;
+      }
 
       // Vimeo doesn’t provide the following information so we’re making
       // some assumptions, but they should be safe to make for HD+ in 2018+
