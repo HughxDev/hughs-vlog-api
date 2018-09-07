@@ -24,6 +24,7 @@
     "marked": "^0.3.6",
     "method-override": "^2.3.7",
     "morgan": "^1.8.1",
+    "node-youtube-resumable-upload": "^0.2.1",
     "opn": "^4.0.2",
     "r-json": "^1.2.5",
     "tus-node-server": "^0.3.1",
