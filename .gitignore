@@ -44,3 +44,4 @@ vimeo-api/*
 sftp-config.json
 .basex
 BaseXData/*
+.basexgui
