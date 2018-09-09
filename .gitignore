@@ -45,3 +45,5 @@ sftp-config.json
 .basex
 BaseXData/*
 .basexgui
+files/*
+upload-test/*

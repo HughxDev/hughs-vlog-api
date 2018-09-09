@@ -8,11 +8,15 @@ var app            = express();
 var router         = express.Router();
 var http           = require( 'http' );
 // var xmlparser      = require( 'express-xml-bodyparser' );
+var serveIndex     = require( 'serve-index' );
+const path = require( 'path' );
+const join = path.join;
 
 const Logger = require( 'bug-killer' );
 
 const decompress = require( 'decompress' );
 const decompressTarxz = require( 'decompress-tarxz' );
+const fs = require( 'fs' );
 
 // External Routes
 var thirdParty = require( './routes/third-party' );
@@ -23,6 +27,8 @@ var uploads = require( './routes/uploads.js' );
 // --- Tus ---
 const tus = require( 'tus-node-server' );
 const server = new tus.Server();
+const youtubeResumableUpload = require( './routes/youtube-resumable-upload.js' );
+const reportUploadProgress = youtubeResumableUpload.reportUploadProgress;
 
 server.datastore = new tus.FileStore( {
   path: '/files'
@@ -66,44 +72,113 @@ function _parseMetadataString(metadata_string) {
     const kv_pair_list = metadata_string.split(',');
      return kv_pair_list.reduce((metadata, kv_pair) => {
         const [key, base64_value] = kv_pair.split(' ');
-         metadata[key] = {
-            encoded: base64_value,
-            decoded: Buffer.from(base64_value, 'base64').toString('ascii'),
-        };
-         return metadata;
+        //  metadata[key] = {
+        //     encoded: base64_value,
+        //     decoded: Buffer.from(base64_value, 'base64').toString('ascii'),
+        // };
+        const decoded = Buffer.from(base64_value, 'base64').toString('ascii');
+        metadata[key] = ( decoded === 'true' ? true : ( decoded === 'false' ? false : decoded ) );
+        return metadata;
     }, {});
 }
 
-server.on( tus.EVENTS.EVENT_UPLOAD_COMPLETE, ( event ) => {
-  console.log( `Upload complete for file ${event.file.id}` );
-
-  var file = _parseMetadataString( event.file.upload_metadata );
-
-  if ( file.filename.decoded.match( /\.redblue$/i ) ) {
-    decompress( `./files/${event.file.id}`, `./files/${event.file.id}--extracted/`, {
-      "plugins": [
-        decompressTarxz()
-      ]
-    } ).then( ( files ) => {
-      console.log( 'Files decompressed:' );
-      console.log( files );
-    } );
-  }
-} );
-
 // const app = express();
 const uploadApp = express();
-
-uploadApp.use(function( req, res, next ) {
+const cors = function ( req, res, next ) {
   res.setHeader( 'Access-Control-Allow-Origin', '*' );
   // res.header( 'Access-Control-Allow-Headers', 'X-Auth-Key');
   res.setHeader( 'Access-Control-Allow-Methods', 'OPTIONS,GET,PUT,POST,DELETE' );
   res.setHeader( 'X-Content-Type-Options', 'nosniff' );
 
   next();
-});
+};
+
+uploadApp.use( cors );
+
+server.on( tus.EVENTS.EVENT_UPLOAD_COMPLETE, ( event ) => {
+  console.log( `Upload complete for file ${event.file.id}` );
+
+  var file = _parseMetadataString( event.file.upload_metadata );
+  file.hash = event.file.id;
+  file.archive = null;
+
+  // @todo: filetype
+  if ( file.filename.match( /\.redblue(\.xz)?$/i ) ) {
+    decompress( `./files/${event.file.id}`, `./files/${event.file.id}--extracted/`, {
+      "plugins": [
+        decompressTarxz()
+      ]
+    } ).then( ( files ) => {
+      file.archive = files;
+      // console.log( 'Files decompressed:', files );
+      /* [
+        {
+          data: <Buffer 3c 3f 78 6d 6c 20 76 65 72 73 69 6f 6e 3d 22 31 2e 30 22 20 65 6e 63 6f 64 69 6e 67 3d 22 55 54 46 2d 38 22 3f 3e 0a 3c 68 76 6d 6c 0a 20 20 78 6d 6c ... >,
+          mode: 420,
+          mtime: 2018-08-12T08:07:26.000Z,
+          path: 'video.hvml',
+          type: 'file'
+        },
+        {
+          data: <Buffer 1a 45 df a3 01 00 00 00 00 00 00 23 42 86 81 01 42 f7 81 01 42 f2 81 04 42 f3 81 08 42 82 88 6d 61 74 72 6f 73 6b 61 42 87 81 02 42 85 81 02 18 53 80 ... >,
+          mode: 420,
+          mtime: 2018-08-12T08:27:05.000Z,
+          path: 'video.mkv',
+          type: 'file'
+        }
+      ] */
+      var videoFileRegex = /(\.mp4|\.webm|\.mov|\.mkv|\.avi)$/i;
+      var hvmlFileRegex = /(\.hvml|\.ovml|\.xml)$/i;
+      var videoFileIndex = null;
+      var hvmlFileIndex = null;
+
+      if ( file.archive.length ) {
+        for ( var i = 0; i < file.archive.length; i++ ) {
+          let archiveFile = file.archive[i];
+          if ( videoFileRegex.test( archiveFile.path ) ) {
+            videoFileIndex = i;
+            console.log( 'videoFileIndex', videoFileIndex );
+            if ( hvmlFileIndex !== null ) {
+              /*
+                Quit searching after both data are found.
+                An upload to YouTube can not have more than
+                one video file or more than one metadata file.
+              */
+              break;
+            }
+          } else if ( hvmlFileRegex.test( archiveFile.path ) ) {
+            hvmlFileIndex = i;
+            console.log( 'hvmlFileIndex', hvmlFileIndex );
+            if ( videoFileIndex ) {
+              break;
+            }
+          }
+          // delete archiveFile.data;
+        } // for
+
+        file.hvml = file.archive[hvmlFileIndex];
+        file.hvml.byteLength = file.archive[hvmlFileIndex].data.byteLength;
+        delete file.archive[hvmlFileIndex].data;
+
+        file.video = file.archive[videoFileIndex];
+        file.video.byteLength = file.archive[videoFileIndex].data.byteLength;
+        delete file.archive[videoFileIndex].data;
+
+        delete file.archive;
+      } // if file.archive.length
+
+      var writeFileSync = fs.writeFileSync( `./files/${file.hash}.json`, JSON.stringify( file, null, 2 ), "utf8" );
+      console.log( 'Wrote meta-metadata file' );
+      // res.send( '' )
+      // req.params.hash = file.hash;
+      // reportUploadProgress( req, res );
+      // res.send( file.hash );
+    } );
+  }
+} ); // server.on
 
 uploadApp.all( '*', server.handle.bind( server ) );
+app.use( '/progress', youtubeResumableUpload.router );
 app.use( '/uploads', uploadApp );
 
 const host = '127.0.0.1';
@@ -196,7 +271,8 @@ app.route( '/upload' )
 app.route( '/search' )
 ; // search
 
-app.use( '/files', uploads );
+// app.use( '/uploads/files', uploads );
+app.use( '/files', express.static( join( __dirname, '/files' ) ), serveIndex( join( __dirname, '/files' ), { 'icons': true } ) );
 
 app.use( '/feed', videos.router );
 

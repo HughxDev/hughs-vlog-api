@@ -18,6 +18,7 @@
     "decompress-tarxz": "^2.1.1",
     "epipebomb": "^1.0.0",
     "express": "^4.15.2",
+    "express-progressbar": "^2.0.0",
     "googleapis": "^18.0.0",
     "http": "0.0.0",
     "libxmljs": "^0.18.7",
@@ -27,6 +28,7 @@
     "node-youtube-resumable-upload": "^0.2.1",
     "opn": "^4.0.2",
     "r-json": "^1.2.5",
+    "serve-index": "^1.9.1",
     "tus-node-server": "^0.3.1",
     "vimeo": "^2.1.0",
     "youtube-api": "^2.0.6"
