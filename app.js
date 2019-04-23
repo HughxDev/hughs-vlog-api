@@ -15,7 +15,7 @@ const join = path.join;
 const Logger = require( 'bug-killer' );
 
 const decompress = require( 'decompress' );
-const decompressTarxz = require( 'decompress-tarxz' );
+// const decompressTarxz = require( 'decompress-tarxz' );
 const fs = require( 'fs' );
 
 // External Routes
@@ -106,7 +106,7 @@ server.on( tus.EVENTS.EVENT_UPLOAD_COMPLETE, ( event ) => {
   if ( file.filename.match( /\.redblue(\.xz)?$/i ) ) {
     decompress( `./files/${event.file.id}`, `./files/${event.file.id}--extracted/`, {
       "plugins": [
-        decompressTarxz()
+        // decompressTarxz()
       ]
     } ).then( ( files ) => {
       file.archive = files;
