@@ -47,3 +47,4 @@ BaseXData/*
 .basexgui
 files/*
 upload-test/*
+.vscode/sftp.json
