@@ -16,6 +16,7 @@ var http           = require( 'http' );
 var serveIndex     = require( 'serve-index' );
 const path = require( 'path' );
 const join = path.join;
+const { spawn } = require( 'child_process' );
 
 const Logger = require( 'bug-killer' );
 
@@ -111,6 +112,28 @@ app.route( '/oembed' )
     oembedReq.end();
   } )
 ; // /oembed
+
+app.route( '/youtube/:id' )
+  // https://stackoverflow.com/a/20357555/214325
+  .get( function ( req, res ) {
+    var child = spawn( 'youtube-dl', [
+      // '-f', "'best[ext=mp4]'",
+      '-f', 'best',
+      '-o', '-', req.params.id
+    ] );
+
+    res.writeHead( 200, {
+      "Content-Type": "video/mp4"
+    } );
+
+    child.stdout.pipe( res );
+
+    res.on( 'end', function () {
+      child.kill( 'SIGKILL' );
+    } );
+    // res.send( req.params.id );
+  } )
+;
 
 app.route( '/upload' )
 ; // upload
