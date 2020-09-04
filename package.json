@@ -14,7 +14,7 @@
     "basex": "^0.9.0",
     "body-parser": "^1.17.1",
     "bug-killer": "^4.4.2",
-    "decompress": "^4.2.0",
+    "decompress": "^4.2.1",
     "decompress-tarxz": "^2.1.1",
     "epipebomb": "^1.0.0",
     "express": "^4.15.2",
