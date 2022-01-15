@@ -1676,7 +1676,7 @@ lodash@^4.14.0, lodash@^4.17.10:
 
 lodash@~1.2.1:
   version "1.2.1"
-  resolved "http://registry.npmjs.org/lodash/-/lodash-1.2.1.tgz#ed47b16e46f06b2b40309b68e9163c17e93ea304"
+  resolved "https://registry.npmjs.org/lodash/-/lodash-1.2.1.tgz#ed47b16e46f06b2b40309b68e9163c17e93ea304"
 
 log-driver@1.2.7:
   version "1.2.7"
@@ -1708,9 +1708,9 @@ map-obj@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/map-obj/-/map-obj-1.0.1.tgz#d933ceb9205d82bdcf4886f6742bdc2b4dea146d"
 
-marked@^0.3.6:
-  version "0.3.19"
-  resolved "https://registry.yarnpkg.com/marked/-/marked-0.3.19.tgz#5d47f709c4c9fc3c216b6d46127280f40b39d790"
+marked@^4.0.10:
+  version "4.0.10"
+  resolved "https://registry.yarnpkg.com/marked/-/marked-4.0.10.tgz#423e295385cc0c3a70fa495e0df68b007b879423"
 
 media-typer@0.3.0:
   version "0.3.0"
@@ -1819,7 +1819,7 @@ minizlib@^1.1.0:
 
 mkdirp@~0.3:
   version "0.3.5"
-  resolved "http://registry.npmjs.org/mkdirp/-/mkdirp-0.3.5.tgz#de3e5f8961c88c787ee1368df849ac4413eca8d7"
+  resolved "https://registry.npmjs.org/mkdirp/-/mkdirp-0.3.5.tgz#de3e5f8961c88c787ee1368df849ac4413eca8d7"
 
 modelo@^4.2.0:
   version "4.2.3"
@@ -2235,7 +2235,7 @@ repeating@^1.1.0:
 
 request@2.44.0:
   version "2.44.0"
-  resolved "http://registry.npmjs.org/request/-/request-2.44.0.tgz#78d62454d68853cadfb07ad31f58b9ec98072ea8"
+  resolved "https://registry.npmjs.org/request/-/request-2.44.0.tgz#78d62454d68853cadfb07ad31f58b9ec98072ea8"
   dependencies:
     bl "~0.9.0"
     caseless "~0.6.0"
@@ -2333,7 +2333,7 @@ request@^2.79.0, request@^2.81.0, request@^2.85.0:
 
 request@~2.25.0:
   version "2.25.0"
-  resolved "http://registry.npmjs.org/request/-/request-2.25.0.tgz#dac1673181887fe0b2ce6bd7e12f46d554a02ce9"
+  resolved "https://registry.npmjs.org/request/-/request-2.25.0.tgz#dac1673181887fe0b2ce6bd7e12f46d554a02ce9"
   dependencies:
     aws-sign "~0.3.0"
     cookie-jar "~0.3.0"
@@ -2808,7 +2808,7 @@ typpy@^2.0.0, typpy@^2.3.1, typpy@^2.3.4, typpy@^2.3.6:
 
 uglify-js@~1.1.1:
   version "1.1.1"
-  resolved "http://registry.npmjs.org/uglify-js/-/uglify-js-1.1.1.tgz#ee71a97c4cefd06a1a9b20437f34118982aa035b"
+  resolved "https://registry.npmjs.org/uglify-js/-/uglify-js-1.1.1.tgz#ee71a97c4cefd06a1a9b20437f34118982aa035b"
 
 uid-number@^0.0.6:
   version "0.0.6"
