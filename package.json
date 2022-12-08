@@ -17,7 +17,7 @@
     "decompress": "^4.2.0",
     "decompress-tarxz": "^2.1.1",
     "epipebomb": "^1.0.0",
-    "express": "^4.15.2",
+    "express": "^4.17.3",
     "express-progressbar": "^2.0.0",
     "googleapis": "^18.0.0",
     "http": "0.0.0",
